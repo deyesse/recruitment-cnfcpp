@@ -18,6 +18,12 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
+    protected static ?string $modelLabel = 'مستخدم';
+
+    protected static ?string $pluralModelLabel = 'المستخدمون';
+
+    protected static ?string $navigationLabel = 'المستخدمون';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     public static function form(Schema $schema): Schema
@@ -27,7 +33,8 @@ class UserResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return UsersTable::configure($table);
+        return UsersTable::configure($table)
+            ->modifyQueryUsing(fn ($query) => $query->where('is_admin', true));
     }
 
     public static function getRelations(): array

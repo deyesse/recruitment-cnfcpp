@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use Filament\Tables\Table;
+use Illuminate\Support\Number;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +21,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Number::useLocale('fr');
+        Table::configureUsing(function (Table $table) {
+            $table->defaultNumberLocale('fr');
+        });
     }
 }

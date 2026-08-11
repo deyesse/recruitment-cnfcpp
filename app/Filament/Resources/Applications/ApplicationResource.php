@@ -41,10 +41,15 @@ class ApplicationResource extends Resource
         return ApplicationsTable::configure($table)
             ->filters([
                 SelectFilter::make('position')
-                    ->label('Position')
-                    ->options(fn () => Position::get()->pluck('name', 'code')
+                    ->label('الخطة الوظيفية')
+                    ->options(
+                        Position::orderBy('code')
+                            ->get()
+                            ->mapWithKeys(fn ($p) => [$p->code => $p->code . ' – ' . $p->name])
                     )
-                    ->searchable(),
+                    ->multiple()
+                    ->searchable()
+                    ->placeholder('الكل'),
             ])
             ->modifyQueryUsing(function ($query) {
                 return $query->join('contests', 'contests.id', '=', 'applications.contest_id')
@@ -68,10 +73,10 @@ class ApplicationResource extends Resource
 
                             TextEntry::make('birth_date')
                                 ->label('تاريخ الميلاد')
-                                ->date(),
+                                ->date('d/m/Y'),
                             TextEntry::make('age')
                                 ->label('العمر')
-                                ->state(fn ($record) => Carbon::parse($record->birth_date)->age.' سنة'),
+                                ->state(fn ($record) => $record->birth_date ? $record->birth_date->age . ' سنة' : '-'),
                         ]),
 
                         Grid::make(3)->schema([
@@ -80,27 +85,22 @@ class ApplicationResource extends Resource
 
                             TextEntry::make('cin_date')
                                 ->label('تاريخ الإصدار')
-                                ->date(),
+                                ->date('d/m/Y'),
 
                             TextEntry::make('tel')
                                 ->label('رقم الهاتف'),
                         ]),
                     ]),
-                Section::make('معلومات المناظرة')
+                Section::make('معلومات المناظرة والتسجيل')
                     ->icon('heroicon-o-trophy')
                     ->schema([
-                        TextEntry::make('contest.name')
-                            ->label('المناظرة'),
+                        TextEntry::make('id')
+                            ->label('رقم التسجيل'),
+                        TextEntry::make('created_at')
+                            ->label('تاريخ ووقت التسجيل')
+                            ->dateTime('d/m/Y H:i'),
                         TextEntry::make('position')
-                            ->label('المنصب'),
-                        TextEntry::make('status')
-                            ->label('الحالة')
-                            ->badge()
-                            ->colors([
-                                'success' => 'accepted',
-                                'warning' => 'pending',
-                                'danger' => 'rejected',
-                            ]),
+                            ->label('رمز الوظيفة / الخطة'),
                     ])
                     ->columns(3),
 
@@ -142,7 +142,7 @@ class ApplicationResource extends Resource
 
                             TextEntry::make('equivalence_date')
                                 ->label('تاريخ المعادلة')
-                                ->date(),
+                                ->date('d/m/Y'),
                         ]),
                     ]),
 

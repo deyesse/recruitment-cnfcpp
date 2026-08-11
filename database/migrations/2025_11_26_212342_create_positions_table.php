@@ -9,8 +9,12 @@ return new class extends Migration {
     {
         Schema::create('positions', function (Blueprint $table) {
             $table->id();
-            $table->integer('code');
+            $table->string('code');
             $table->string('name');
+            $table->foreignIdFor(\App\Models\ContestType::class)->nullable();
+            $table->string('type')->default('cadre'); // cadre, technicien, commis, chauffeur, nettoyage
+            $table->string('degree')->nullable();
+            $table->string('specialty')->nullable();
             $table->timestamps();
         });
     }

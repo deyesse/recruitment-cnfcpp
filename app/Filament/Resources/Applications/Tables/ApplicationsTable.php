@@ -4,11 +4,13 @@ namespace App\Filament\Resources\Applications\Tables;
 
 use App\Filament\Exports\ApplicationExporter;
 use Carbon\Carbon;
+use App\Models\Position;
 use Filament\Actions\Action;
 use Filament\Actions\ExportAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 
@@ -22,6 +24,11 @@ class ApplicationsTable
                     ->exporter(ApplicationExporter::class),
             ])
             ->columns([
+                TextColumn::make('id')
+                    ->label('رقم التسجيل')
+                    ->searchable()
+                    ->sortable(),
+
                 TextColumn::make('name')
                     ->label('الاسم')
                     ->searchable(
@@ -35,41 +42,54 @@ class ApplicationsTable
                 TextColumn::make('tel')
                     ->label('رقم الهاتف')
                     ->searchable(),
-                TextColumn::make('age')
-                    ->label('العمر')
-                    ->state(fn ($record) => Carbon::parse($record->birth_date)->age.' سنة'),
 
-                TextColumn::make('status')
-                    ->label('الحالة')
-                    ->badge()
-                    ->searchable(),
+                TextColumn::make('age')
+                    ->label("العمر\n(سنة)")
+                    ->state(fn ($record) => $record->birth_date ? $record->birth_date->age : '-')
+                    ->alignCenter()
+                    ->sortable(query: function ($query, string $direction) {
+                        return $query->orderBy('birth_date', $direction === 'asc' ? 'desc' : 'asc');
+                    }),
+
+                TextColumn::make('created_at')
+                    ->label('تاريخ ووقت التسجيل')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable(),
 
                 TextColumn::make('position')
-                    ->label('الوظيفة')
-                    ->searchable(),
+                    ->label('رمز الوظيفة / الخطة')
+                    ->searchable()
+                    ->sortable(),
 
-                TextColumn::make('score')
-                    ->label('النتيجة')
+                TextColumn::make('calculated_score')
+                    ->label('مجموع النقاط')
+                    ->state(fn ($record) => $record->calculated_score ?? $record->calculateScore())
                     ->sortable(query: function ($query, string $direction) {
-                        return $query->orderByRaw(
-                            '(applications.bac_average * contests.bac_factor
-                + applications.grad_average * contests.grad_factor) '.$direction
-                        );
+                        return $query->orderBy('calculated_score', $direction);
                     })
-                    ->numeric(locale: 'en_US'),
+                    ->numeric(decimalPlaces: 3, locale: 'en_US'),
+
                 TextColumn::make('test_grade')
                     ->placeholder('لم يجتز الاختبار')
                     ->label('نتيجة الاختبار')
                     ->sortable(),
                 TextColumn::make('final')
-                    ->state(fn ($record) => $record->test_grade ? ($record->score + $record->test_grade) / 2 : null)
+                    ->state(fn ($record) => $record->test_grade ? (($record->calculated_score ?? $record->calculateScore()) + $record->test_grade) / 2 : null)
                     ->placeholder('لم يجتز الاختبار')
                     ->label('النتيجة النهائية')
                     ->sortable(),
 
             ])
             ->filters([
-                //
+                SelectFilter::make('position')
+                    ->label('الخطة الوظيفية')
+                    ->options(
+                        Position::orderBy('code')
+                            ->get()
+                            ->mapWithKeys(fn ($p) => [$p->code => $p->code . ' – ' . $p->name])
+                    )
+                    ->searchable()
+                    ->placeholder('الكل'),
             ])
             ->groups([
                 Group::make('position')->label('الوظيفة'),

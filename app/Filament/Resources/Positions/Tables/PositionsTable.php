@@ -15,11 +15,34 @@ class PositionsTable
         return $table
             ->columns([
                 TextColumn::make('code')
-                    ->translateLabel()
+                    ->label('الرمز')
+                    ->badge()
                     ->sortable(),
+
                 TextColumn::make('name')
-                    ->translateLabel()
+                    ->label('عنوان الوظيفة')
+                    ->searchable()
+                    ->sortable(),
+
+                TextColumn::make('contestType.name')
+                    ->label('الصنف / الپروفيل')
+                    ->badge()
+                    ->color('warning')
+                    ->searchable()
+                    ->sortable(),
+
+                TextColumn::make('degree')
+                    ->label('الشهادة المطلوبة')
+                    ->placeholder('—')
+                    ->limit(40)
                     ->searchable(),
+
+                TextColumn::make('specialty')
+                    ->label('الاختصاص')
+                    ->placeholder('—')
+                    ->limit(30)
+                    ->searchable(),
+
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

@@ -13,12 +13,25 @@ class Contest extends Model
     protected function casts(): array
     {
         return [
-            'ends_at' => 'datetime',
-            'degrees' => 'array',
+            'ends_at'   => 'datetime',
+            'starts_at' => 'datetime',
+            'degrees'   => 'array',
+            'show_score' => 'boolean',
+            'is_test_mode' => 'boolean',
         ];
     }
 
-    protected function applications(): HasMany
+    public function contestType(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(ContestType::class);
+    }
+
+    public function positions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Position::class);
+    }
+
+    public function applications(): HasMany
     {
         return $this->hasMany(Application::class);
     }

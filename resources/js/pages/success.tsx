@@ -44,20 +44,76 @@ export default function Success({ data = {} }) {
         </div>
 
         {/* Card */}
-        <div className="bg-white shadow-md rounded-lg p-6 relative">
-        <div className="absolute top-6 left-6 border-2 border-gray-800 px-4 py-2 text-center font-semibold text-gray-800 bg-white">
-            رقم التسجيل: {data.id}
-        </div>
-        <div className="absolute top-6 right-6 border-2 border-gray-800 px-4 py-2 text-center font-semibold text-gray-800 bg-white">
-            مجموع النقاط: {data.score}
-        </div>
+        <div className="bg-white shadow-md rounded-lg p-6 md:p-8">
 
-            <h2 class="text-3xl mb-2 font-bold text-center">استمارة الترشح </h2>
-            <h2 class="text-base mb-2 font-bold text-center">المناظرة الخارجية للمركز الوطني للتكوين المستمر والترقية المهنية</h2>
+          {/* Header matching official model template */}
+          <div className="mb-6 pb-4 border-b border-gray-300">
+            {/* Top Row: Ministry info (Right), Title (Center), Category Box (Left) */}
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
+              {/* Right: Ministry & Center Info */}
+              <div className="text-right text-xs md:text-sm font-semibold leading-snug text-gray-900">
+                {(data.header_text ? data.header_text.split('\n') : [
+                  'الجمهورية التونسية',
+                  'وزارة التشغيل والتكوين المهني',
+                  'المركز الوطني للتكوين المستمر والترقية المهنية'
+                ]).map((line: string, idx: number, arr: string[]) => (
+                  <div key={idx} className={idx === arr.length - 1 ? 'font-bold' : ''}>
+                    {line}
+                  </div>
+                ))}
+              </div>
+
+              {/* Center: Main Title */}
+              <div className="text-center flex-1 my-2">
+                <h1 className="text-xl md:text-2xl font-extrabold text-gray-900 leading-tight">
+                  {data.contest_name || 'استمارة ترشح للمشاركة في المناظرة الخارجية'}
+                </h1>
+                {!data.contest_name && (
+                  <h2 className="text-base md:text-lg font-bold text-gray-800 mt-1">
+                    بعنوان سنتي 2025 و2026
+                  </h2>
+                )}
+              </div>
+
+              {/* Left: Position Category Box */}
+              <div>
+                <div className="border-2 border-gray-900 p-2 md:p-3 text-center text-xs md:text-sm font-bold text-gray-900 min-w-[150px] whitespace-pre-line leading-tight bg-white">
+                  {(() => {
+                    const pos = String(data.position || '');
+                    const num = parseInt(pos, 10);
+                    if (num >= 1 && num <= 15) {
+                      return 'المهندسين والمحللين\nوالمتصرفين\nمن 1 إلى 15';
+                    } else if (pos === '16') {
+                      return 'ملحق إدارة\nمؤهل التقني السامي\n16';
+                    } else if (['17', '18'].includes(pos)) {
+                      return 'مستكتب إدارة\n17 و 18';
+                    } else if (pos === '19') {
+                      return 'سائق\n19';
+                    } else if (['20', '21'].includes(pos)) {
+                      return 'عون تنظيف\n20 و 21';
+                    }
+                    return data.position_name ? `${data.position_name}\n(${pos})` : `خطة ${pos}`;
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            {/* Second Row: Registration Number (Right) and Score (Left, if enabled) */}
+            <div className="flex items-center justify-between mt-4">
+              <div className="border-2 border-gray-900 px-4 py-1.5 font-bold text-gray-900 text-sm md:text-base bg-white">
+                رقم التسجيل: <span className="font-mono">{data.id}</span>
+              </div>
+              {data.show_score !== false && (
+                <div className="border-2 border-gray-900 px-4 py-1.5 font-bold text-gray-900 text-sm md:text-base bg-white">
+                  مجموع النقاط: <span className="font-mono">{data.score}</span>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Personal Info */}
           <h3 className="text-xl font-semibold text-gray-700 mb-4">
-            المعلومات الشخصية
+            I- الهوية والمعلومات الشخصية
           </h3>
 
           <table className="w-full text-right border border-gray-200 rounded-lg bg-white">

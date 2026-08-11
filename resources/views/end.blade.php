@@ -14,7 +14,7 @@
 
         <img src="cnfcpp.png" width="100" style="margin: 0 auto" />
         <h1>
-            استمارة ترشح للمشاركة في المناظرة الخارجية لانتداب إطارات بعنوان سنة 2025
+            {{ $lastContest ? $lastContest->name : 'استمارة ترشح للمشاركة في المناظرة الخارجية لانتداب إطارات' }}
         </h1>
         <p>
             الرجاء تعمير البيانات المطلوبة بكلّ دقة باللغة العربية ثم المصادقة عليها.
@@ -39,10 +39,17 @@
             </div>
 
             <div class="deadline-text">
-                <p class="deadline-label ">انتهت فترة التسجيل</p>
-                <p class="deadline-date">
-                    الاربعاء 21 جانفي 2025 على الساعة 23:59
-                </p>
+                @if(isset($lastContest) && $lastContest)
+                    <p class="deadline-label ">انتهت فترة التسجيل</p>
+                    <p class="deadline-date">
+                        {{ \Illuminate\Support\Carbon::parse($lastContest->ends_at)->locale('ar')->translatedFormat('l d F Y على الساعة H:i') }}
+                    </p>
+                @else
+                    <p class="deadline-label ">لا توجد مناظرة مفتوحة حالياً</p>
+                    <p class="deadline-date">
+                        سيتم الإعلان عن المناظرات القادمة قريباً.
+                    </p>
+                @endif
             </div>
         </div>
 

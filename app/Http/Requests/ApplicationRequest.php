@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Application;
+use App\Models\Position;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -22,8 +24,10 @@ class ApplicationRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'position' => 'required|numeric|exists:positions,code',
+        $code = (string) $this->input('position');
+
+        $rules = [
+            'position' => 'required|string|exists:positions,code',
             'name' => 'required|string|max:255',
             'gender' => 'required|string|max:10',
             'birth_date' => 'required|date',
@@ -31,21 +35,146 @@ class ApplicationRequest extends FormRequest
             'governorate' => 'required|string|max:255',
             'city' => 'required|string|max:255',
             'postal_code' => 'required|numeric|digits:4',
-            'cin' => 'required|numeric|digits:8|unique:applications,cin',
+            'cin' => 'required|numeric|digits:8',
             'cin_date' => 'required|date',
-            'tel' => 'required|string|max:8',
-            'email' => 'required|email|max:255|unique:applications,email',
-
-            'degree' => 'nullable|string|max:255',
-            'specialty' => 'required|string|max:255',
-            'graduation_year' => 'required|integer|min:1900|max:2100',
-            'equivalence_decision' => 'nullable:string|max:255',
-            'equivalence_date' => 'required_with:equivalence_decision|nullable|date',
+            'tel' => 'required|numeric|digits:8',
+            'email' => 'required|email|max:255',
             'agreement' => 'accepted',
-
-            'bac_average' => 'required|numeric|max:20|min:9',
-            'grad_average' => 'required|numeric|max:20|min:9',
         ];
+
+        if (in_array($code, ['17', '18'])) {
+            // Commis
+            $rules['school_level'] = 'required|string|max:255';
+            $rules['end_school_year'] = 'nullable|integer|min:1950|max:2026';
+            $rules['school_institution'] = 'nullable|string|max:255';
+            $rules['grade_9_average'] = 'required|numeric|min:0|max:20';
+        } elseif ($code === '19') {
+            // Chauffeur
+            $rules['school_level'] = 'required|string|max:255';
+            $rules['end_school_year'] = 'nullable|integer|min:1950|max:2026';
+            $rules['school_institution'] = 'nullable|string|max:255';
+            $rules['grade_9_average'] = 'required|numeric|min:0|max:20';
+            $rules['driving_license_category'] = 'required|string|max:50';
+            $rules['driving_license_date'] = 'required|date';
+        } elseif (in_array($code, ['20', '21'])) {
+            // Nettoyage
+            $rules['school_level'] = 'required|string|max:255';
+            $rules['end_school_year'] = 'nullable|integer|min:1950|max:2026';
+            $rules['school_institution'] = 'nullable|string|max:255';
+            $rules['grade_6_average'] = 'required|numeric|min:0|max:20';
+        } elseif ($code === '16') {
+            // Technicien Supérieur
+            $rules['degree'] = 'nullable|string|max:255';
+            $rules['specialty'] = 'required|string|max:255';
+            $rules['graduation_year'] = 'required|integer|min:1900|max:2100';
+            $rules['institution'] = 'nullable|string|max:255';
+            $rules['equivalence_decision'] = 'nullable|string|max:255';
+            $rules['equivalence_date'] = 'required_with:equivalence_decision|nullable|date';
+            $rules['bac_average'] = 'nullable|numeric|max:20|min:0';
+            $rules['btp_average'] = 'nullable|numeric|max:20|min:0';
+            $rules['grad_average'] = 'required|numeric|max:20|min:0';
+        } else {
+            // Cadres (01 - 15)
+            $rules['degree'] = 'nullable|string|max:255';
+            $rules['specialty'] = 'required|string|max:255';
+            $rules['graduation_year'] = 'required|integer|min:1900|max:2100';
+            $rules['institution'] = 'nullable|string|max:255';
+            $rules['equivalence_decision'] = 'nullable|string|max:255';
+            $rules['equivalence_date'] = 'required_with:equivalence_decision|nullable|date';
+            $rules['bac_average'] = 'required|numeric|max:20|min:0';
+            $rules['grad_average'] = 'required|numeric|max:20|min:0';
+        }
+
+        return $rules;
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            if ($validator->errors()->any()) {
+                return;
+            }
+
+            $code = (string) $this->input('position');
+            $birthDate = $this->input('birth_date');
+            $cin = $this->input('cin');
+            $email = $this->input('email');
+
+            // Resolve contest and its uniqueness mode
+            $contest = \App\Models\Contest::query()->where('ends_at', '>', now())->first();
+            $uniquenessMode = $contest?->uniqueness_mode ?? 'per_contest';
+            $contestId = $contest?->id;
+
+            // -----------------------------------------------
+            // Duplicate Check based on uniqueness mode
+            // -----------------------------------------------
+            $duplicateQuery = \App\Models\Application::where('contest_id', $contestId)
+                ->where('cin', $cin);
+
+            if ($uniquenessMode === 'per_type') {
+                // Find the contest_type_id of the selected position
+                $selectedPos = Position::where('code', $code)->first();
+                $contestTypeId = $selectedPos?->contest_type_id;
+                // Restrict check to applications that share the same contest_type
+                if ($contestTypeId) {
+                    $positionCodesOfSameType = Position::where('contest_type_id', $contestTypeId)
+                        ->pluck('code');
+                    $duplicateQuery->whereIn('position', $positionCodesOfSameType);
+                }
+            } elseif ($uniquenessMode === 'per_position') {
+                // Restrict check to the exact same position code
+                $duplicateQuery->where('position', $code);
+            }
+            // 'per_contest' => no extra filter, check CIN across entire contest
+
+            if ($duplicateQuery->exists()) {
+                $modeMsg = match($uniquenessMode) {
+                    'per_type'     => 'لقد قمت بالتسجيل مسبقاً في هذا الصنف من المناظرة.',
+                    'per_position' => 'لقد قمت بالتسجيل مسبقاً في هذه الخطة الوظيفية.',
+                    default        => 'لقد قمت بالتسجيل مسبقاً في هذه المناظرة.',
+                };
+                $validator->errors()->add('cin', $modeMsg);
+                return;
+            }
+
+            // Email uniqueness scoped to contest
+            if (\App\Models\Application::where('contest_id', $contestId)->where('email', $email)->exists()) {
+                $validator->errors()->add('email', 'تم استعمال هذا البريد الإلكتروني في هذه المناظرة من قبل.');
+                return;
+            }
+
+            if ($code) {
+                $pos = Position::where('code', $code)->first();
+                $contestType = $pos?->contestType;
+
+                // 1. Check Age Limit
+                if ($birthDate && $contestType && ! $contestType->isAgeEligible($birthDate)) {
+                    $maxAge = $contestType->max_age;
+                    $refDate = $contestType->age_reference_date
+                        ? $contestType->age_reference_date->format('d/m/Y')
+                        : 'غرة جانفي';
+
+                    $validator->errors()->add(
+                        'birth_date',
+                        "عذراً، يتجاوز سن المترشح السن الأقصى المسموح به لهذه المناظرة ({$maxAge} سنة بتاريخ {$refDate})."
+                    );
+                }
+
+                // 2. Check Minimum Score Eligibility
+                $tempApp = new Application($this->all());
+                $score = $tempApp->calculateScore();
+                $minScore = $contestType?->min_score ?? 12.0;
+
+                if ($score < $minScore) {
+                    $formattedScore = number_format($score, 2);
+                    $formattedMin = number_format($minScore, 2);
+                    $validator->errors()->add(
+                        'bac_average',
+                        "عذراً، مجموع النقاط المتحصل عليه ({$formattedScore}) دون الحد الأدنى المطلوب لقبول الترشح ({$formattedMin})."
+                    );
+                }
+            }
+        });
     }
 
     public function messages()
@@ -83,29 +212,31 @@ class ApplicationRequest extends FormRequest
             'postal_code.digits' => 'الرمز البريدي يجب أن يحتوي على 4 أرقام.',
 
             'cin.required' => 'حقل رقم بطاقة التعريف الوطنية إلزامي.',
-            'cin.unique' => 'تم استعمال رقم بطاقة التعريف من قبل',
-            'agreement.accepted' => 'يجب المصادقة على صحة البيانات',
-            'cin.integer' => 'رقم بطاقة التعريف يجب أن يكون رقماً.',
-            'cin.digits' => 'رقم بطاقة التعريف يجب أن يحتوي على 8 أرقام.',
+            'cin.unique' => 'تم استعمال رقم بطاقة التعريف الوطنية من قبل.',
+            'cin.numeric' => 'رقم بطاقة التعريف يجب أن يكون رقماً.',
+            'cin.digits' => 'رقم بطاقة التعريف يجب أن يحتوي على 8 أرقام بالضبط.',
+
+            'agreement.accepted' => 'يجب المصادقة على صحة البيانات.',
 
             'cin_date.required' => 'حقل تاريخ إصدار بطاقة التعريف إلزامي.',
             'cin_date.date' => 'تاريخ إصدار بطاقة التعريف غير صالح.',
 
-            'tel.required' => 'رقم الهاتف إلزامي.',
-            'tel.string' => 'رقم الهاتف يجب أن يكون نصاً.',
-            'tel.max' => 'رقم الهاتف يجب ألا يتجاوز 8 أرقام.',
-            'grad_average.max' => 'المعدل التخرج يجب الا يتجاوز 20',
-            'grad_average.min' => 'معدل التخرج يجب الا يقل عن 9',
-            'bac_average.min' => 'معدل الباكالوريا يجب الا يقل عن 9',
-            'bac_average.max' => 'معدل الباكالوريا يجب الا يتجاوز عن 20',
+            'tel.required' => 'رقم الهاتف الجوال إلزامي.',
+            'tel.numeric' => 'رقم الهاتف الجوال يجب أن يتكون من أرقام فقط.',
+            'tel.digits' => 'رقم الهاتف الجوال يجب أن يتكون من 8 أرقام بالضبط.',
+
+            'grad_average.max' => 'معدل التخرج يجب ألا يتجاوز 20.',
+            'grad_average.min' => 'معدل التخرج يجب ألا يقل عن 0.',
+            'bac_average.min' => 'معدل البكالوريا يجب ألا يقل عن 0.',
+            'bac_average.max' => 'معدل البكالوريا يجب ألا يتجاوز 20.',
 
             'email.required' => 'البريد الإلكتروني إلزامي.',
             'email.email' => 'صيغة البريد الإلكتروني غير صالحة.',
             'email.max' => 'البريد الإلكتروني يجب ألا يتجاوز 255 حرفاً.',
-            'email.unique' => 'تم استعمال البريد الالكتروني من قبل',
+            'email.unique' => 'تم استعمال البريد الإلكتروني من قبل.',
 
-            'degree.string' => 'الشهـادة يجب أن تكون نصاً.',
-            'degree.max' => 'الشهـادة يجب ألا تتجاوز 255 حرفاً.',
+            'degree.string' => 'الشهادة يجب أن تكون نصاً.',
+            'degree.max' => 'الشهادة يجب ألا تتجاوز 255 حرفاً.',
 
             'specialty.required' => 'الاختصاص إلزامي.',
             'specialty.string' => 'الاختصاص يجب أن يكون نصاً.',

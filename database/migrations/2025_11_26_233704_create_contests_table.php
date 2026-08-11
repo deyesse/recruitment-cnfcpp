@@ -10,11 +10,14 @@ return new class extends Migration
     {
         Schema::create('contests', function (Blueprint $table) {
             $table->id();
-            $table->integer('bac_factor');
-            $table->integer('grad_factor');
             $table->string('name');
+            $table->foreignIdFor(\App\Models\ContestType::class)->nullable();
+            $table->string('type')->default('cadre'); // cadre, technicien, commis, chauffeur, nettoyage
+            $table->float('min_score')->default(12.0);
+            $table->float('bac_factor')->nullable()->default(0.6);
+            $table->float('grad_factor')->nullable()->default(0.4);
             $table->dateTime('ends_at');
-            $table->json('degrees');
+            $table->json('degrees')->nullable();
             $table->timestamps();
         });
     }
