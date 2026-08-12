@@ -3,8 +3,9 @@
 namespace App\Filament\Resources\Applications\Tables;
 
 use App\Filament\Exports\ApplicationExporter;
-use Carbon\Carbon;
+use App\Models\Contest;
 use App\Models\Position;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\ExportAction;
 use Filament\Actions\ViewAction;
@@ -83,11 +84,16 @@ class ApplicationsTable
             ->filters([
                 SelectFilter::make('position')
                     ->label('الخطة الوظيفية')
-                    ->options(
-                        Position::orderBy('code')
-                            ->get()
-                            ->mapWithKeys(fn ($p) => [$p->code => $p->code . ' – ' . $p->name])
-                    )
+                    ->options(function () {
+                        $contest = Contest::where('ends_at', '>', now())->first();
+                        $positions = $contest
+                            ? $contest->positions()->orderBy('code')->get()
+                            : Position::orderBy('code')->get();
+
+                        return $positions->mapWithKeys(
+                            fn ($p) => [$p->code => $p->code . ' – ' . $p->name]
+                        );
+                    })
                     ->searchable()
                     ->placeholder('الكل'),
             ])
@@ -103,7 +109,7 @@ class ApplicationsTable
 
                         $record->save();
                     })
-                    ->visible(fn ($record) => $record->status === 'جديد'),
+                    ->visible(fn ($record) => $record->status === 'جديد' && ! auth()->user()?->isGestionnaire()),
                 Action::make('revert')
                     ->label('إلغاء القبول')
                     ->color('danger')
@@ -113,7 +119,7 @@ class ApplicationsTable
                         $record->status = 'جديد';
                         $record->save();
                     })
-                    ->visible(fn ($record) => $record->status === 'مقبول'),
+                    ->visible(fn ($record) => $record->status === 'مقبول' && ! auth()->user()?->isGestionnaire()),
 
                 Action::make('note_test')
                     ->label('تقييم الاختبار')
@@ -129,7 +135,7 @@ class ApplicationsTable
                         $record->test_grade = $data['test_grade'];
                         $record->save();
                     })
-                    ->visible(fn ($record) => $record->status === 'مقبول'),
+                    ->visible(fn ($record) => $record->status === 'مقبول' && ! auth()->user()?->isGestionnaire()),
 
                 ViewAction::make()
                     ->label('عرض'),

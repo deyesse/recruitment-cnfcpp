@@ -93,21 +93,20 @@ Route::post('/apply', function (ApplicationRequest $request) {
     $validated['contest_name'] = $contest?->name;
     $validated['show_score'] = (bool) ($contest?->show_score ?? true);
     $validated['header_text'] = $contest?->header_text;
-    $validated['position_name'] = Position::where('code', $validated['position'])->first()?->name;
+    $positionModel = Position::where('code', $validated['position'])->with('contestType')->first();
+    $validated['position_name'] = $positionModel?->name;
+    $validated['position_type'] = $positionModel?->type ?? 'cadre';
+    $validated['base_average_field'] = $positionModel?->contestType?->base_average_field ?? 'bac_average';
 
     $app = \App\Models\Application::create(Arr::except($validated, ['agreement', 'contest_name', 'show_score', 'header_text']));
     $validated['id'] = $app->id;
     $validated['score'] = $app->score;
 
     // Format dates in French format (d/m/Y) for presentation
-    if (! empty($validated['birth_date'])) {
-        try { $validated['birth_date'] = \Carbon\Carbon::parse($validated['birth_date'])->format('d/m/Y'); } catch (\Exception $e) {}
-    }
-    if (! empty($validated['cin_date'])) {
-        try { $validated['cin_date'] = \Carbon\Carbon::parse($validated['cin_date'])->format('d/m/Y'); } catch (\Exception $e) {}
-    }
-    if (! empty($validated['equivalence_date'])) {
-        try { $validated['equivalence_date'] = \Carbon\Carbon::parse($validated['equivalence_date'])->format('d/m/Y'); } catch (\Exception $e) {}
+    foreach (['birth_date', 'cin_date', 'equivalence_date', 'driving_license_date'] as $dateField) {
+        if (! empty($validated[$dateField])) {
+            try { $validated[$dateField] = \Carbon\Carbon::parse($validated[$dateField])->format('d/m/Y'); } catch (\Exception $e) {}
+        }
     }
 
     return Redirect::to('/success')->with(['data' => $validated]);
@@ -162,6 +161,8 @@ Route::post('/reprint', function (\Illuminate\Http\Request $request) {
     $contestName = $contest?->name ?? '';
     $showScore = (bool) ($contest?->show_score ?? true);
 
+    $positionForReprint = Position::where('code', (string) $app->position)->with('contestType')->first();
+
     $data = [
         'id' => $app->id,
         'contest_name' => $contestName,
@@ -169,6 +170,8 @@ Route::post('/reprint', function (\Illuminate\Http\Request $request) {
         'header_text' => $contest?->header_text,
         'position' => (string) $app->position,
         'position_name' => $posName,
+        'position_type' => $positionForReprint?->type ?? 'cadre',
+        'base_average_field' => $positionForReprint?->contestType?->base_average_field ?? 'bac_average',
         'name' => $app->name,
         'gender' => $app->gender,
         'birth_date' => $app->birth_date?->format('d/m/Y'),
@@ -180,13 +183,22 @@ Route::post('/reprint', function (\Illuminate\Http\Request $request) {
         'cin_date' => $app->cin_date?->format('d/m/Y'),
         'tel' => $app->tel,
         'email' => $app->email,
+        // Cadre / Technicien fields
         'degree' => $app->degree,
         'specialty' => $app->specialty,
         'graduation_year' => $app->graduation_year,
         'equivalence_decision' => $app->equivalence_decision,
         'equivalence_date' => $app->equivalence_date?->format('d/m/Y'),
         'bac_average' => $app->bac_average,
+        'btp_average' => $app->btp_average,
         'grad_average' => $app->grad_average,
+        // Commis / Chauffeur / Nettoyage fields
+        'school_level' => $app->school_level,
+        'grade_9_average' => $app->grade_9_average,
+        'grade_6_average' => $app->grade_6_average,
+        // Chauffeur fields
+        'driving_license_category' => $app->driving_license_category,
+        'driving_license_date' => $app->driving_license_date?->format('d/m/Y'),
         'score' => $app->calculated_score ?? $app->calculateScore(),
     ];
 

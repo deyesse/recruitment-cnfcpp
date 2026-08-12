@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class UserPolicy
 {
@@ -12,7 +11,7 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->is_admin;
+        return $user->isSuperAdmin() || $user->isAdmin();
     }
 
     /**
@@ -20,7 +19,15 @@ class UserPolicy
      */
     public function view(User $user, User $model): bool
     {
-        return $user->is_admin;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($user->isAdmin()) {
+            return $model->isGestionnaire() || $model->id === $user->id;
+        }
+
+        return $model->id === $user->id;
     }
 
     /**
@@ -28,7 +35,7 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return $user->is_admin;
+        return $user->isSuperAdmin() || $user->isAdmin();
     }
 
     /**
@@ -36,7 +43,15 @@ class UserPolicy
      */
     public function update(User $user, User $model): bool
     {
-        return $user->is_admin;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($user->isAdmin()) {
+            return $model->isGestionnaire() || $model->id === $user->id;
+        }
+
+        return $model->id === $user->id;
     }
 
     /**
@@ -44,7 +59,15 @@ class UserPolicy
      */
     public function delete(User $user, User $model): bool
     {
-        return $user->is_admin;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($user->isAdmin()) {
+            return $model->isGestionnaire() && $model->id !== $user->id;
+        }
+
+        return false;
     }
 
     /**
@@ -52,7 +75,7 @@ class UserPolicy
      */
     public function restore(User $user, User $model): bool
     {
-        return $user->is_admin;
+        return $user->isSuperAdmin();
     }
 
     /**
@@ -60,6 +83,6 @@ class UserPolicy
      */
     public function forceDelete(User $user, User $model): bool
     {
-        return $user->is_admin;
+        return $user->isSuperAdmin();
     }
 }

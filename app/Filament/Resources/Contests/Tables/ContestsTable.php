@@ -66,7 +66,7 @@ class ContestsTable
                     ->label('إيقاف الاختبار وتصفير العداد')
                     ->icon('heroicon-o-beaker')
                     ->color('warning')
-                    ->visible(fn ($record) => (bool) $record->is_test_mode)
+                    ->visible(fn ($record) => (bool) $record->is_test_mode && auth()->user()?->isSuperAdmin())
                     ->requiresConfirmation()
                     ->modalHeading('تأكيد إيقاف وضع الاختبار وتصفير العداد')
                     ->modalDescription('هل ترغب في إيقاف وضع الاختبار، وحذف جميع المطالب التجريبية المودعة، وتصفير العداد للبدء من الرقم 1؟')
@@ -86,6 +86,7 @@ class ContestsTable
                             ->success()
                             ->send();
                     }),
+                \Filament\Actions\ViewAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([

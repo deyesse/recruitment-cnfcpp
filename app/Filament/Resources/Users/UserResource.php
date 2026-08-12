@@ -34,7 +34,19 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return UsersTable::configure($table)
-            ->modifyQueryUsing(fn ($query) => $query->where('is_admin', true));
+            ->modifyQueryUsing(function ($query) {
+                $user = auth()->user();
+                if ($user?->isSuperAdmin()) {
+                    return $query;
+                }
+                if ($user?->isAdmin()) {
+                    return $query->where(function ($q) use ($user) {
+                        $q->where('role', 'gestionnaire')->orWhere('id', $user->id);
+                    });
+                }
+
+                return $query->where('id', $user?->id);
+            });
     }
 
     public static function getRelations(): array

@@ -31,6 +31,7 @@ class ContestForm
                             ->rows(3)
                             ->placeholder("الجمهورية التونسية\nوزارة التشغيل والتكوين المهني\nالمركز الوطني للتكوين المستمر والترقية المهنية")
                             ->helperText('النص الرسمي الذي يظهر في أعلى الاستمارة المطبوعة (أدخل كل سطر في سطر مستقل)')
+                            ->hidden(fn () => ! auth()->user()?->isSuperAdmin())
                             ->columnSpanFull(),
 
                         DateTimePicker::make('starts_at')
@@ -60,12 +61,14 @@ class ContestForm
                                 'per_position' => '📋 مطلب ترشح واحد لكل خطة وظيفية (يمكن التسجيل في عدة خطط مختلفة)',
                             ])
                             ->default('per_contest')
-                            ->required()
+                            ->hidden(fn () => ! auth()->user()?->isSuperAdmin())
+                            ->required(fn () => (bool) auth()->user()?->isSuperAdmin())
                             ->columnSpanFull(),
                     ])->columns(2),
 
                 Section::make('وضع الاختبار التجريبي (Mode Test)')
                     ->description('تفعيل أو تعطيل حظر تقديم الترشحات على العموم واشتراط رمز سر للتجربة.')
+                    ->hidden(fn () => ! auth()->user()?->isSuperAdmin())
                     ->schema([
                         Toggle::make('is_test_mode')
                             ->label('تفعيل وضع الاختبار (Mode Test)')
@@ -84,6 +87,7 @@ class ContestForm
 
                 Section::make('الوظائف والأصناف المعنية بهذه المناظرة (Profils & Postes)')
                     ->description('اختر الوظائف المفتوحة في هذه المناظرة. يمكن اختيار وظائف تنتمي لعدة أصناف (إطارات، تقني، مستكتب، سائق، عون تنظيف...) في نفس المناظرة.')
+                    ->hidden(fn () => ! auth()->user()?->isSuperAdmin())
                     ->schema([
                         CheckboxList::make('positions')
                             ->label('قائمة الوظائف المتاحة')
@@ -96,7 +100,7 @@ class ContestForm
                             ->searchable()
                             ->bulkToggleable()
                             ->columns(2)
-                            ->required()
+                            ->required(fn () => (bool) auth()->user()?->isSuperAdmin())
                             ->helperText('كل وظيفة تتبع تلقائياً ضوابط التقييم وشروط السن والمعدل الخاصة بصنفها.'),
                     ]),
             ]);

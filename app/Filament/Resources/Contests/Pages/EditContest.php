@@ -20,7 +20,7 @@ class EditContest extends EditRecord
                 ->label('إيقاف وضع الاختبار وتصفير العداد')
                 ->icon('heroicon-o-beaker')
                 ->color('warning')
-                ->visible(fn ($record) => (bool) $record->is_test_mode)
+                ->visible(fn ($record) => (bool) $record->is_test_mode && auth()->user()?->isSuperAdmin())
                 ->requiresConfirmation()
                 ->modalHeading('تأكيد إيقاف وضع الاختبار وتصفير العداد')
                 ->modalDescription('هل ترغب في إيقاف وضع الاختبار، وحذف جميع المطالب التجريبية المودعة حالياً، وتصفير العداد حتى يبدأ أول مطلب جديد بالرقم (1)؟')
@@ -43,7 +43,8 @@ class EditContest extends EditRecord
                     $this->fillForm();
                 }),
 
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->visible(fn () => auth()->user()?->isSuperAdmin()),
         ];
     }
 }

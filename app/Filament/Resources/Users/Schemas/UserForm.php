@@ -3,9 +3,8 @@
 namespace App\Filament\Resources\Users\Schemas;
 
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 
 class UserForm
@@ -17,27 +16,46 @@ class UserForm
                 TextInput::make('name')
                     ->label('الاسم')
                     ->required(),
-                Toggle::make('is_admin')
-                    ->label('حساب مدير / مشرف')
+
+                Select::make('role')
+                    ->label('الدور / الصلاحية')
+                    ->options(function ($record) {
+                        $authUser = auth()->user();
+                        if ($authUser?->isSuperAdmin()) {
+                            return [
+                                'super_admin' => 'مدير فائق (Super Admin)',
+                                'admin' => 'مدير (Admin)',
+                                'gestionnaire' => 'متصرف (Gestionnaire)',
+                            ];
+                        }
+
+                        if ($record && $record->id === $authUser?->id) {
+                            return [
+                                'admin' => 'مدير (Admin)',
+                            ];
+                        }
+
+                        return [
+                            'gestionnaire' => 'متصرف (Gestionnaire)',
+                        ];
+                    })
+                    ->default('gestionnaire')
+                    ->disabled(fn ($record) => $record && $record->id === auth()->id() && ! auth()->user()?->isSuperAdmin())
                     ->required(),
+
                 TextInput::make('email')
                     ->label('البريد الإلكتروني')
                     ->email()
                     ->required(),
+
                 DateTimePicker::make('email_verified_at')
                     ->label('تاريخ التحقق من البريد الإلكتروني'),
+
                 TextInput::make('password')
                     ->label('كلمة المرور')
                     ->password()
-                    ->required(),
-                Textarea::make('two_factor_secret')
-                    ->label('رمز المصادقة الثنائية')
-                    ->columnSpanFull(),
-                Textarea::make('two_factor_recovery_codes')
-                    ->label('رموز استعادة المصادقة الثنائية')
-                    ->columnSpanFull(),
-                DateTimePicker::make('two_factor_confirmed_at')
-                    ->label('تاريخ تأكيد المصادقة الثنائية'),
+                    ->required(fn (string $operation): bool => $operation === 'create')
+                    ->dehydrated(fn (?string $state) => filled($state)),
             ]);
     }
 }

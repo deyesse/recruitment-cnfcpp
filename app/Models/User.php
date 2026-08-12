@@ -2,17 +2,15 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable implements FilamentUser
 {
-    use HasFactory, Notifiable ;
+    use HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -23,6 +21,8 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
+        'is_admin',
+        'role',
     ];
 
     /**
@@ -36,16 +36,40 @@ class User extends Authenticatable implements FilamentUser
         'two_factor_recovery_codes',
         'remember_token',
     ];
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isGestionnaire(): bool
+    {
+        return $this->role === 'gestionnaire';
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
-        if($panel->getId() == "admin"){
-            return $this->is_admin;
+        if ($panel->getId() === 'admin') {
+            return in_array($this->role, ['super_admin', 'admin', 'gestionnaire']) || $this->is_admin;
         }
-        if($panel->getId() == "app") {
-            return !$this->is_admin;
-        }
-        return false;
 
+        return false;
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (User $user) {
+            if (in_array($user->role, ['super_admin', 'admin'])) {
+                $user->is_admin = true;
+            } else {
+                $user->is_admin = false;
+            }
+        });
     }
 
     /**
@@ -59,6 +83,7 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
+            'is_admin' => 'boolean',
         ];
     }
 }

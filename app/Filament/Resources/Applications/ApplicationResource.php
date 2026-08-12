@@ -7,6 +7,7 @@ use App\Filament\Resources\Applications\Pages\ViewApplication;
 use App\Filament\Resources\Applications\Schemas\ApplicationForm;
 use App\Filament\Resources\Applications\Tables\ApplicationsTable;
 use App\Models\Application;
+use App\Models\Contest;
 use App\Models\Position;
 use BackedEnum;
 use Carbon\Carbon;
@@ -42,11 +43,16 @@ class ApplicationResource extends Resource
             ->filters([
                 SelectFilter::make('position')
                     ->label('الخطة الوظيفية')
-                    ->options(
-                        Position::orderBy('code')
-                            ->get()
-                            ->mapWithKeys(fn ($p) => [$p->code => $p->code . ' – ' . $p->name])
-                    )
+                    ->options(function () {
+                        $contest = Contest::where('ends_at', '>', now())->first();
+                        $positions = $contest
+                            ? $contest->positions()->orderBy('code')->get()
+                            : Position::orderBy('code')->get();
+
+                        return $positions->mapWithKeys(
+                            fn ($p) => [$p->code => $p->code . ' – ' . $p->name]
+                        );
+                    })
                     ->multiple()
                     ->searchable()
                     ->placeholder('الكل'),
