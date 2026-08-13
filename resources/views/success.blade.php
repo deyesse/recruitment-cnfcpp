@@ -81,18 +81,26 @@
             @php
                 $posCode = (string)($data['position'] ?? '');
                 $posNum = (int)$posCode;
+                $posName = $data['position_name'] ?? '';
+
                 if ($posNum >= 1 && $posNum <= 15) {
-                    $categoryBox = "المهندسين والمحللين\nوالمتصرفين\nمن 1 إلى 15";
+                    $catTitle = $posName ?: "المهندسين والمحللين\nوالمتصرفين";
+                    $catRef = $posCode ?: "من 1 إلى 15";
                 } elseif ($posCode === '16') {
-                    $categoryBox = "ملحق إدارة\nمؤهل التقني السامي\n16";
+                    $catTitle = $posName ?: "ملحق إدارة\nمؤهل التقني السامي";
+                    $catRef = "16";
                 } elseif (in_array($posCode, ['17', '18'])) {
-                    $categoryBox = "مستكتب إدارة\n17 و 18";
+                    $catTitle = $posName ?: "مستكتب إدارة";
+                    $catRef = $posCode ?: "17 و 18";
                 } elseif ($posCode === '19') {
-                    $categoryBox = "سائق\n19";
+                    $catTitle = $posName ?: "سائق";
+                    $catRef = "19";
                 } elseif (in_array($posCode, ['20', '21'])) {
-                    $categoryBox = "عون تنظيف\n20 و 21";
+                    $catTitle = $posName ?: "عون تنظيف";
+                    $catRef = $posCode ?: "20 و 21";
                 } else {
-                    $categoryBox = isset($data['position_name']) ? $data['position_name'] . "\n(" . $posCode . ")" : "خطة " . $posCode;
+                    $catTitle = $posName ?: "خطة " . $posCode;
+                    $catRef = $posCode;
                 }
             @endphp
 
@@ -121,8 +129,13 @@
 
                     <!-- Left: Position Category Box -->
                     <div>
-                        <div class="border-2 border-gray-900 p-2 md:p-3 text-center text-xs md:text-sm font-bold text-gray-900 min-w-[150px] whitespace-pre-line leading-tight bg-white">
-                            {!! nl2br(e($categoryBox)) !!}
+                        <div class="border-2 border-gray-900 p-2 md:p-3 text-center text-gray-900 min-w-[130px] bg-white">
+                            <div class="text-xs md:text-sm font-semibold text-gray-800 leading-tight whitespace-pre-line">
+                                {!! nl2br(e($catTitle)) !!}
+                            </div>
+                            <div class="text-lg md:text-xl font-black text-gray-900 mt-1 leading-tight tracking-wide">
+                                {{ $catRef }}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -149,24 +162,35 @@
 
                         @php
                             $rows = [
-                                'رمز المناظرة المزمع المشاركة فيها' => $data['position'],
-                                'اسم ولقب' => $data['name'],
-                                'الجنس' => $data['gender'],
-                                'تاريخ الولادة' => $data['birth_date'],
-                                'العنوان الحالي' => $data['address'],
-                                'الولاية' => $data['governorate'],
-                                'الرقم البريدي' => $data['postal_code'],
-                                'رقم بطاقة التعريف' => $data['cin'],
-                                'تاريخ إصدار بطاقة التعريف' => $data['cin_date'],
-                                'الهاتف' => $data['tel'],
-                                'البريد الإلكتروني' => $data['email'],
+                                'رمز المناظرة المزمع المشاركة فيها' => $data['position'] ?? '',
+                                'اسم ولقب' => $data['name'] ?? '',
+                                'الجنس' => $data['gender'] ?? '',
+                                'تاريخ الولادة' => $data['birth_date'] ?? '',
+                                'العنوان الحالي' => $data['address'] ?? '',
+                                'الولاية' => $data['governorate'] ?? '',
+                                'الرقم البريدي' => $data['postal_code'] ?? '',
+                                'رقم بطاقة التعريف' => $data['cin'] ?? '',
+                                'تاريخ إصدار بطاقة التعريف' => $data['cin_date'] ?? '',
+                                'الهاتف' => $data['tel'] ?? '',
+                                'البريد الإلكتروني' => $data['email'] ?? '',
                             ];
                         @endphp
 
                         @foreach($rows as $label => $value)
                             <tr class="hover:bg-gray-50">
                                 <th class="py-3 px-4 font-medium text-gray-700 w-1/3 bg-gray-100">{{ $label }}</th>
-                                <td class="py-3 px-4 text-gray-800">{{ $value }}</td>
+                                <td class="py-3 px-4 text-gray-800">
+                                    @if($label === 'رمز المناظرة المزمع المشاركة فيها')
+                                        <span>
+                                            <strong class="font-black text-base md:text-lg text-gray-900">{{ $data['position'] ?? '' }}</strong>
+                                            @if(!empty($data['position_name']))
+                                                <span class="font-medium text-gray-700"> - {{ $data['position_name'] }}</span>
+                                            @endif
+                                        </span>
+                                    @else
+                                        {{ $value }}
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
 

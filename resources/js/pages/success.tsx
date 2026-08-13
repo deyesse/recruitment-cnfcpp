@@ -42,12 +42,42 @@ export default function Success({ data = {} as any }) {
   const categoryBox = (() => {
     const pos = String(data.position || '')
     const num = parseInt(pos, 10)
-    if (num >= 1 && num <= 15) return 'المهندسين والمحللين\nوالمتصرفين\nمن 1 إلى 15'
-    if (pos === '16') return 'ملحق إدارة\nمؤهل التقني السامي\n16'
-    if (['17', '18'].includes(pos)) return 'مستكتب إدارة\n17 و 18'
-    if (pos === '19') return 'سائق\n19'
-    if (['20', '21'].includes(pos)) return 'عون تنظيف\n20 و 21'
-    return data.position_name ? `${data.position_name}\n(${pos})` : `خطة ${pos}`
+    const name = data.position_name || ''
+
+    if (num >= 1 && num <= 15) {
+      return {
+        title: name || 'المهندسين والمحللين والمتصرفين',
+        ref: pos || 'من 1 إلى 15',
+      }
+    }
+    if (pos === '16') {
+      return {
+        title: name || 'ملحق إدارة\nمؤهل التقني السامي',
+        ref: '16',
+      }
+    }
+    if (['17', '18'].includes(pos)) {
+      return {
+        title: name || 'مستكتب إدارة',
+        ref: pos || '17 و 18',
+      }
+    }
+    if (pos === '19') {
+      return {
+        title: name || 'سائق',
+        ref: '19',
+      }
+    }
+    if (['20', '21'].includes(pos)) {
+      return {
+        title: name || 'عون تنظيف',
+        ref: pos || '20 و 21',
+      }
+    }
+    return {
+      title: name || `خطة ${pos}`,
+      ref: pos,
+    }
   })()
 
   return (
@@ -104,8 +134,13 @@ export default function Success({ data = {} as any }) {
 
               {/* Category Box */}
               <div className="category-box-wrapper">
-                <div className="category-box border-2 border-gray-900 p-2 text-center text-xs font-bold text-gray-900 whitespace-pre-line leading-tight bg-white">
-                  {categoryBox}
+                <div className="category-box border-2 border-gray-900 p-2 md:p-3 text-center text-gray-900 min-w-[130px] bg-white">
+                  <div className="category-box-title text-xs md:text-sm font-semibold text-gray-800 leading-tight whitespace-pre-line">
+                    {categoryBox.title}
+                  </div>
+                  <div className="category-box-ref text-lg md:text-xl font-black text-gray-900 mt-1 leading-tight tracking-wide">
+                    {categoryBox.ref}
+                  </div>
                 </div>
               </div>
             </div>
@@ -132,7 +167,18 @@ export default function Success({ data = {} as any }) {
               {Object.entries(personalRows).map(([label, value]) => (
                 <tr key={label}>
                   <th className="py-1 px-3 bg-gray-100 w-2/5">{label}</th>
-                  <td className="py-1 px-3">{value ?? ''}</td>
+                  <td className="py-1 px-3">
+                    {label === 'رمز المناظرة المزمع المشاركة فيها' ? (
+                      <span>
+                        <strong className="font-black text-base md:text-lg text-gray-900">{data.position}</strong>
+                        {data.position_name && (
+                          <span className="font-medium text-gray-700"> - {data.position_name}</span>
+                        )}
+                      </span>
+                    ) : (
+                      value ?? ''
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -316,9 +362,19 @@ export default function Success({ data = {} as any }) {
           }
 
           .category-box {
-            font-size: 10px !important;
             min-width: 110px !important;
             border: 2px solid black !important;
+            padding: 3px !important;
+          }
+
+          .category-box-title {
+            font-size: 10px !important;
+            font-weight: 600 !important;
+          }
+
+          .category-box-ref {
+            font-size: 16px !important;
+            font-weight: 900 !important;
           }
 
           .reg-box, .score-box {
