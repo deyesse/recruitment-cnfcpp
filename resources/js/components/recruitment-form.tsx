@@ -87,7 +87,7 @@ export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
     }
 
     let ageError: string | null = null;
-    if (selectedPos && selectedPos.max_age && data.birth_date) {
+    if (selectedPos && data.birth_date && (selectedPos.min_age || selectedPos.max_age)) {
         const parts = data.birth_date.split('-');
         if (parts.length === 3 && parts[0].length === 4) {
             const birthYear = parseInt(parts[0], 10);
@@ -96,11 +96,36 @@ export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
                 : 2026;
             const candidateAge = refYear - birthYear;
 
-            if (candidateAge > Number(selectedPos.max_age)) {
+            const refFormatted = selectedPos.age_reference_date
+                ? new Date(selectedPos.age_reference_date).toLocaleDateString('fr-FR')
+                : '01/01/2026';
+
+            if (selectedPos.min_age && candidateAge < Number(selectedPos.min_age)) {
+                ageError = `تنبيه هام: سن المترشح (${candidateAge} سنة) أقل من السن الأدنى المسموح به لهذا الصنف (${selectedPos.min_age} سنة بتاريخ ${refFormatted}). يُرفض الملف تلقائياً.`;
+            } else if (selectedPos.max_age && candidateAge > Number(selectedPos.max_age)) {
+                ageError = `تنبيه هام: سن المترشح (${candidateAge} سنة) يتجاوز السن الأقصى المسموح به لهذا الصنف (${selectedPos.max_age} سنة بتاريخ ${refFormatted}). يُرفض الملف تلقائياً.`;
+            }
+        }
+    }
+
+    let licenseError: string | null = null;
+    if (selectedPos && (String(selectedPos.code) === '19' || selectedPos.type === 'chauffeur') && data.driving_license_date) {
+        const parts = data.driving_license_date.split('-');
+        if (parts.length === 3 && parts[0].length === 4) {
+            const minYears = selectedPos.driving_license_min_years !== undefined ? Number(selectedPos.driving_license_min_years) : 2;
+            const licenseDate = new Date(data.driving_license_date);
+            const refDate = selectedPos.age_reference_date
+                ? new Date(selectedPos.age_reference_date)
+                : new Date('2026-01-01');
+
+            const yearsAfter = new Date(licenseDate);
+            yearsAfter.setFullYear(yearsAfter.getFullYear() + minYears);
+
+            if (yearsAfter > refDate) {
                 const refFormatted = selectedPos.age_reference_date
                     ? new Date(selectedPos.age_reference_date).toLocaleDateString('fr-FR')
                     : '01/01/2026';
-                ageError = `تنبيه هام: سن المترشح (${candidateAge} سنة) يتجاوز السن الأقصى المسموح به لهذا الصنف (${selectedPos.max_age} سنة بتاريخ ${refFormatted}). يُرفض الملف تلقائياً.`;
+                licenseError = `تنبيه هام: يجب أن يكون المترشح متحصل على رخصة السياقة منذ ${minYears} سنوات على الأقل بتاريخ المرجع (${refFormatted}). يُرفض الملف تلقائياً.`;
             }
         }
     }
@@ -158,7 +183,7 @@ export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
                             {timeLeft.isExpired ? 'انتهت فترة التسجيل' : 'تاريخ غلق باب الترشحات'}
                         </p>
                         <p className={`text-lg font-bold ${timeLeft.isExpired ? 'text-red-900' : 'text-orange-900'}`}>
-                            {deadline.toLocaleDateString('ar-TN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            {deadline.toLocaleDateString('ar-TN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).replace(/\s*في\s*/, ' - ')}
                         </p>
                     </div>
                 </div>
@@ -762,6 +787,11 @@ export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
                                             required
                                             disabled={timeLeft.isExpired}
                                         />
+                                        {licenseError && (
+                                            <p className="text-red-600 text-xs font-bold mt-2">
+                                                {licenseError}
+                                            </p>
+                                        )}
                                     </div>
                                 </>
                             )}

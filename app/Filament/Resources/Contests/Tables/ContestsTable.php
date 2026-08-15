@@ -21,7 +21,10 @@ class ContestsTable
                 TextColumn::make('name')
                     ->label('اسم المناظرة')
                     ->searchable()
-                    ->wrap(),
+                    ->grow()
+                    ->lineClamp(3)
+                    ->extraHeaderAttributes(['style' => 'min-width: 320px;'])
+                    ->extraCellAttributes(['style' => 'min-width: 320px; font-weight: 600;']),
 
                 IconColumn::make('is_test_mode')
                     ->label('وضع الاختبار')

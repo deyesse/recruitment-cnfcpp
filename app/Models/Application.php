@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,6 +17,39 @@ class Application extends Model
     public function contest(): BelongsTo
     {
         return $this->belongsTo(Contest::class);
+    }
+
+    public function getProfileType(): string
+    {
+        $pos = Position::where('code', (string) $this->position)->first();
+        if ($pos && $pos->type) {
+            return $pos->type;
+        }
+        $posNum = intval($this->position);
+        if ($posNum >= 1 && $posNum <= 15) return 'cadre';
+        if ($this->position == '16') return 'technicien';
+        if (in_array((string) $this->position, ['17', '18'])) return 'commis';
+        if ((string) $this->position == '19') return 'chauffeur';
+        if (in_array((string) $this->position, ['20', '21'])) return 'nettoyage';
+        return 'cadre';
+    }
+
+    public function getAgeAtReferenceDate(): ?int
+    {
+        if (! $this->birth_date) {
+            return null;
+        }
+
+        $pos = Position::where('code', (string) $this->position)->first();
+        $contestType = $this->contest?->contestType
+            ?? $pos?->contestType
+            ?? ContestType::where('code', $pos?->type ?? 'cadre')->first();
+
+        $refDate = $contestType?->age_reference_date
+            ?? ($this->contest?->starts_at ? $this->contest->starts_at->copy()->startOfYear() : null)
+            ?? Carbon::create(2026, 1, 1);
+
+        return (int) Carbon::parse($this->birth_date)->diffInYears(Carbon::parse($refDate));
     }
 
     public function calculateScore(): float

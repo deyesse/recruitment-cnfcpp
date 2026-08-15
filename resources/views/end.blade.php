@@ -57,6 +57,10 @@
 
     </div>
 
+    <footer style="margin-top: 32px; text-align: center; font-size: 12px; color: #0284c7; padding: 16px; border-top: 1px solid #e2e8f0; font-family: sans-serif;" dir="ltr">
+        © Powered by <strong style="color: #0369a1;">E..E.E. Bouzekri</strong> - <strong style="color: #0369a1;">DSI-CNFCPP</strong> August 2026
+    </footer>
+
     <style>
         /* =========================
    Contest Header

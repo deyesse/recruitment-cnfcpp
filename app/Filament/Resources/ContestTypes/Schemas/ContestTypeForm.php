@@ -114,19 +114,26 @@ class ContestTypeForm
 
                 Section::make('معايير القبول والأهلية')
                     ->schema([
+                        TextInput::make('min_age')
+                            ->label('السن الأدنى المقبول (Âge minimum)')
+                            ->numeric()
+                            ->nullable()
+                            ->placeholder('مثال: 18')
+                            ->helperText('إذا كان سن المترشح أقل من هذا الحد بتاريخ المرجع، يُرفض الملف تلقائياً. اتركه فارغاً إذا لا يوجد حد أدنى.'),
+
                         TextInput::make('max_age')
                             ->label('السن الأقصى المقبول (Âge maximum)')
                             ->numeric()
                             ->nullable()
-                            ->placeholder('مثال: 35')
-                            ->helperText('إذا كان سن المترشح يتجاوز هذا الحد في تاريخ المرجع، يُرفض الملف تلقائياً. اتركه فارغاً إذا لا يوجد حد أقصى.'),
+                            ->placeholder('مثال: 40')
+                            ->helperText('إذا كان سن المترشح يتجاوز هذا الحد بتاريخ المرجع، يُرفض الملف تلقائياً. اتركه فارغاً إذا لا يوجد حد أقصى.'),
 
                         DatePicker::make('age_reference_date')
-                            ->label('تاريخ مرجع حساب السن')
+                            ->label('تاريخ مرجع حساب السن (الأدنى والأقصى)')
                             ->nullable()
                             ->displayFormat('d/m/Y')
                             ->placeholder('مثال: 01/01/2026')
-                            ->helperText('السن يُحسب في هذا التاريخ. مثال: غرة جانفي 2026 = 2026-01-01'),
+                            ->helperText('السن الأدنى والأقصى للمترشح يُحسبان بناءً على هذا التاريخ المرجعي (مثال: غرة جانفي 2026 = 01-01-2026).'),
 
                         Toggle::make('has_bac')
                             ->label('تفعيل معدل البكالوريا / BTP')
@@ -142,7 +149,17 @@ class ContestTypeForm
 
                         Toggle::make('has_driving_license')
                             ->label('تفعيل معطيات رخصة السياقة')
-                            ->default(false),
+                            ->default(false)
+                            ->live(),
+
+                        TextInput::make('driving_license_min_years')
+                            ->label('الأقدمية الدنيا لرخصة السياقة (بالسنوات)')
+                            ->numeric()
+                            ->default(2)
+                            ->minValue(0)
+                            ->placeholder('مثال: 2')
+                            ->visible(fn ($get) => (bool) $get('has_driving_license'))
+                            ->helperText('الحد الأدنى لسنوات الحصول على رخصة السياقة بتاريخ المرجع. مثال: 2 تعني سنتين على الأقل.'),
                     ])->columns(2),
             ]);
     }

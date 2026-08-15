@@ -1,392 +1,898 @@
 import React from 'react'
 import { Head } from '@inertiajs/react'
 
-export default function Success({ data = {} as any }) {
-  const posType: string = data.position_type ?? 'cadre'
-  const baseAvgField: string = data.base_average_field ?? 'bac_average'
+interface SuccessProps {
+  data?: {
+    id?: number | string
+    position?: string
+    position_name?: string
+    position_type?: string
+    contest_name?: string
+    header_text?: string
+    logo_url?: string
+    show_score?: boolean
+    min_score?: number
+    score?: number | string
+    created_at?: string
 
-  const isCadreOrTechnicien = ['cadre', 'technicien'].includes(posType)
-  const isSchoolLevel = ['commis', 'chauffeur', 'nettoyage'].includes(posType)
+    name?: string
+    gender?: string
+    birth_date?: string
+    address?: string
+    city?: string
+    governorate?: string
+    postal_code?: string
+    cin?: string
+    cin_date?: string
+    tel?: string
+    email?: string
+
+    // Cadre / Technicien
+    degree?: string
+    specialty?: string
+    graduation_year?: number | string
+    institution?: string
+    equivalence_decision?: string
+    equivalence_date?: string
+    bac_average?: number | string
+    btp_average?: number | string
+    grad_average?: number | string
+
+    // Commis / Chauffeur / Nettoyage
+    school_level?: string
+    end_school_year?: number | string
+    school_institution?: string
+    grade_9_average?: number | string
+    grade_6_average?: number | string
+
+    // Chauffeur
+    driving_license_category?: string
+    driving_license_date?: string
+  }
+}
+
+export default function Success({ data = {} }: SuccessProps) {
+  const posCode = String(data.position || '').trim()
+  const posNum = parseInt(posCode, 10)
+  const posType = data.position_type || (
+    posNum >= 1 && posNum <= 15 ? 'cadre' :
+    posCode === '16' ? 'technicien' :
+    ['17', '18'].includes(posCode) ? 'commis' :
+    posCode === '19' ? 'chauffeur' :
+    ['20', '21'].includes(posCode) ? 'nettoyage' : 'cadre'
+  )
+
+  const isCadre = posType === 'cadre'
+  const isTechnicien = posType === 'technicien'
+  const isCommis = posType === 'commis'
   const isChauffeur = posType === 'chauffeur'
+  const isNettoyage = posType === 'nettoyage'
 
-  /* ── label de l'average de base selon le champ configuré ── */
-  const baseAvgLabel: Record<string, string> = {
-    bac_average:    'معدل البكالوريا',
-    btp_average:    'معدل شهادة التقني السامي (BTP)',
-    grade_9_average: 'معدل السنة التاسعة أساسي',
-    grade_6_average: 'معدل السنة السادسة أساسي',
-  }
-  const baseAvgValue = {
-    bac_average:    data.bac_average,
-    btp_average:    data.btp_average,
-    grade_9_average: data.grade_9_average,
-    grade_6_average: data.grade_6_average,
-  }[baseAvgField] ?? '-'
-
-  const personalRows: Record<string, string> = {
-    'رمز المناظرة المزمع المشاركة فيها': `${data.position} - ${data.position_name ?? ''}`,
-    'الاسم واللقب': data.name,
-    'الجنس': data.gender,
-    'تاريخ الولادة': data.birth_date,
-    'العنوان الحالي': data.address,
-    'المعتمدية': data.city,
-    'الولاية': data.governorate,
-    'الترقيم البريدي': data.postal_code,
-    'رقم بطاقة التعريف الوطنية': data.cin,
-    'تاريخ إصدار بطاقة التعريف الوطنية': data.cin_date,
-    'رقم الهاتف الجوال': data.tel,
-    'البريد الإلكتروني': data.email,
-  }
-
-  /* ── Catégory box text ── */
-  const categoryBox = (() => {
-    const pos = String(data.position || '')
-    const num = parseInt(pos, 10)
-    const name = data.position_name || ''
-
-    if (num >= 1 && num <= 15) {
-      return {
-        title: name || 'المهندسين والمحللين والمتصرفين',
-        ref: pos || 'من 1 إلى 15',
-      }
-    }
-    if (pos === '16') {
-      return {
-        title: name || 'ملحق إدارة\nمؤهل التقني السامي',
-        ref: '16',
-      }
-    }
-    if (['17', '18'].includes(pos)) {
-      return {
-        title: name || 'مستكتب إدارة',
-        ref: pos || '17 و 18',
-      }
-    }
-    if (pos === '19') {
-      return {
-        title: name || 'سائق',
-        ref: '19',
-      }
-    }
-    if (['20', '21'].includes(pos)) {
-      return {
-        title: name || 'عون تنظيف',
-        ref: pos || '20 و 21',
-      }
-    }
-    return {
-      title: name || `خطة ${pos}`,
-      ref: pos,
-    }
+  /* ── Category Title / Label ── */
+  const posTitle = (() => {
+    if (data.position_name) return data.position_name
+    if (posNum >= 1 && posNum <= 15) return 'إطار (مهندس / متصرف / تقني)'
+    if (posCode === '16') return 'ملحق إدارة (مؤهل التقني السامي)'
+    if (['17', '18'].includes(posCode)) return 'مستكتب إدارة'
+    if (posCode === '19') return 'سائق'
+    if (['20', '21'].includes(posCode)) return 'عون تنظيف'
+    return `خطة رقم ${posCode}`
   })()
 
-  return (
-    <div lang="ar" dir="rtl" className="bg-gray-100 min-h-screen">
-      <Head title="تم استلام طلبكم بنجاح" />
+  const headerLines = (() => {
+    if (data.header_text && data.header_text.trim()) {
+      return data.header_text
+        .split('\n')
+        .map((l: string) => l.trim())
+        .filter(Boolean)
+    }
+    return [
+      'الجمهورية التونسية',
+      'وزارة التشغيل والتكوين المهني',
+      'المركز الوطني لتكوين المكونين وهندسة التكوين'
+    ]
+  })()
 
-      {/* ── زر الطباعة ── */}
-      <div className="text-center mb-6 no-print pt-10">
-        <button
-          onClick={() => window.print()}
-          className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition font-semibold"
-        >
-          🖨️ طباعة / حفظ PDF
-        </button>
+  const equivalenceText = [data.equivalence_decision, data.equivalence_date ? `بتاريخ ${data.equivalence_date}` : null]
+    .filter(Boolean)
+    .join(' - ')
+
+  const scoreFormatted = data.score !== undefined && data.score !== null && data.score !== ''
+    ? (typeof data.score === 'number' ? Number(data.score).toFixed(2) : data.score)
+    : '-'
+
+  const logoSrc = data.logo_url || '/cnfcpp.png'
+
+  return (
+    <div lang="ar" dir="rtl" className="bg-slate-100 min-h-screen text-slate-900 font-sans antialiased selection:bg-teal-100">
+      <Head title={`استمارة ترشح - ${data.name || 'مطلب ترشح'} (رقم ${data.id || ''})`}>
+        <link rel="preconnect" href="https://fonts.bunny.net" />
+        <link href="https://fonts.bunny.net/css?family=tajawal:400,500,700,800,900" rel="stylesheet" />
+      </Head>
+
+      {/* ── Screen Actions Bar (Hidden on print) ── */}
+      <div className="no-print max-w-4xl mx-auto pt-8 px-4">
+        <div className="bg-white rounded-2xl shadow-lg border border-slate-200/80 p-6 mb-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4 text-right">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl font-bold shadow-inner">
+                ✓
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">تم تسجيل مطلب ترشحكم بنجاح</h1>
+                <p className="text-sm text-slate-600 mt-0.5">
+                  يرجى طباعة استمارة الترشح وإمضاؤها لإرفاقها بالملف الورقي في صورة القبول الأولي.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 bg-teal-700 hover:bg-teal-800 active:bg-teal-900 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-md shadow-teal-700/20 hover:shadow-lg transition-all duration-200 cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                <span>طباعة الاستمارة / حفظ PDF</span>
+              </button>
+
+              <a
+                href="/"
+                className="inline-flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-3 rounded-xl font-medium text-sm transition"
+              >
+                الرئيسية
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="max-w-5xl text-gray-800 mx-auto px-4 pb-10">
+      {/* ── The Printable Sheet Container ── */}
+      <div className="max-w-4xl mx-auto px-4 pb-12 print:p-0 print:m-0 print:max-w-none">
+        <div className="sheet-card bg-white shadow-xl rounded-2xl p-6 md:p-10 border border-slate-200 print:shadow-none print:border-none print:p-0 print:rounded-none flex flex-col justify-between min-h-[850px] print:min-h-[272mm]">
 
-        <div className="text-center goog mb-10">
-          <h2 className="text-3xl font-bold text-gray-800">تم إرسال طلبكم بنجاح</h2>
-          <p className="text-gray-500 mt-2">
-            طباعة استمارة الترشح وامضائها لتضمينها بالملف الورقي في صورة قبول المترشح في الفرز الأولي.
-          </p>
-        </div>
+          {/* ══════════════════════════════════════════════════════════════
+              HEADER SECTION
+             ══════════════════════════════════════════════════════════════ */}
+          <header className="header-box pb-4 mb-4">
+            <div className="flex flex-row items-center justify-between gap-4">
 
-        {/* ══ Card ══ */}
-        <div className="bg-white shadow-md rounded-lg p-6 md:p-8 print-card">
-
-          {/* ── Header ── */}
-          <div className="header-section mb-6 pb-4 border-b border-gray-300">
-
-            {/* Row 1 : Ministry | Title | Box */}
-            <div className="header-top">
-              {/* Ministry */}
-              <div className="ministry-info text-right text-xs font-semibold leading-snug text-gray-900">
-                {(data.header_text ? data.header_text.split('\n') : [
-                  'الجمهورية التونسية',
-                  'وزارة التشغيل والتكوين المهني',
-                  'المركز الوطني للتكوين المستمر والترقية المهنية',
-                ]).map((line: string, idx: number, arr: string[]) => (
-                  <div key={idx} className={idx === arr.length - 1 ? 'font-bold' : ''}>{line}</div>
+              {/* Right: Official State Hierarchy */}
+              <div className="ministry-col text-right text-xs md:text-sm leading-relaxed font-bold text-slate-900 min-w-[210px]">
+                {headerLines.map((line: string, idx: number) => (
+                  <div key={idx} className={idx === headerLines.length - 1 ? 'font-black mt-0.5' : ''}>
+                    {line}
+                  </div>
                 ))}
               </div>
 
-              {/* Title */}
-              <div className="contest-title text-center">
-                <h1 className="text-xl font-extrabold text-gray-900 leading-tight">
-                  {data.contest_name || 'استمارة ترشح للمشاركة في المناظرة الخارجية'}
+              {/* Center: Contest Title */}
+              <div className="title-col flex-1 text-center px-2">
+                <h1 className="text-base md:text-lg font-extrabold text-teal-800 leading-snug">
+                  استمارة ترشح للمناظرة الخارجية لانتداب إطارات وأعوان
                 </h1>
-                {!data.contest_name && (
-                  <h2 className="text-base font-bold text-gray-800 mt-1">بعنوان سنتي 2025 و2026</h2>
-                )}
+                <div className="text-xs md:text-sm font-bold text-slate-800 mt-0.5">
+                  بعنوان سنتي 2025 و 2026
+                </div>
               </div>
 
-              {/* Category Box */}
-              <div className="category-box-wrapper">
-                <div className="category-box border-2 border-gray-900 p-2 md:p-3 text-center text-gray-900 min-w-[130px] bg-white">
-                  <div className="category-box-title text-xs md:text-sm font-semibold text-gray-800 leading-tight whitespace-pre-line">
-                    {categoryBox.title}
-                  </div>
-                  <div className="category-box-ref text-lg md:text-xl font-black text-gray-900 mt-1 leading-tight tracking-wide">
-                    {categoryBox.ref}
-                  </div>
-                </div>
+              {/* Left: Logo (aligned to the far left) */}
+              <div className="logo-col flex items-center justify-end text-left min-w-[170px] shrink-0">
+                <img
+                  src={logoSrc}
+                  alt="شعار المؤسسة"
+                  className="h-20 md:h-24 max-h-24 w-auto object-contain mr-auto ml-0"
+                  onError={(e) => {
+                    const target = e.currentTarget as HTMLImageElement;
+                    if (target.src !== window.location.origin + '/cnfcpp.png') {
+                      target.src = '/cnfcpp.png';
+                    }
+                  }}
+                />
               </div>
             </div>
 
-            {/* Row 2 : Registration | Score */}
-            <div className="header-bottom mt-4">
-              <div className="reg-box border-2 border-gray-900 px-4 py-1.5 font-bold text-gray-900 text-sm bg-white inline-block">
-                رقم التسجيل: <span className="font-mono">{data.id}</span>
+            {/* Top 3 Horizontal Metric / Info Cards */}
+            <div className="top-cards-bar grid grid-cols-3 gap-3 my-4 text-center">
+              {/* Right: Registration Number */}
+              <div className="card-reg border border-slate-300 rounded-lg py-2.5 px-3 bg-slate-50/90 flex items-center justify-center gap-1.5 text-xs md:text-sm font-bold text-slate-900">
+                <span>رقم التسجيل</span>
+                <span className="font-mono font-black text-sm md:text-base mr-1">#{data.id ?? '-'}</span>
               </div>
-              {data.show_score !== false && (
-                <div className="score-box border-2 border-gray-900 px-4 py-1.5 font-bold text-gray-900 text-sm bg-white inline-block">
-                  مجموع النقاط: <span className="font-mono">{data.score}</span>
+
+              {/* Center: Position Code & Title */}
+              <div className="card-pos border border-slate-300 rounded-lg py-2.5 px-3 bg-slate-50/90 flex items-center justify-center gap-2 text-xs md:text-sm font-bold text-slate-950">
+                <span className="text-slate-700 font-semibold text-xs">الخطة ورمز المناظرة:</span>
+                <span className="font-extrabold text-slate-900 text-xs md:text-sm">{posTitle}</span>
+                <span className="text-slate-400 font-bold">—</span>
+                <span className="font-mono font-black text-base md:text-lg text-slate-950 px-1.5 py-0.5 rounded bg-slate-200/60 border border-slate-300">
+                  {data.position || '—'}
+                </span>
+              </div>
+
+              {/* Left: Total Score or Date */}
+              {data.show_score !== false ? (
+                <div className="card-score border border-emerald-500 rounded-lg py-2.5 px-3 bg-emerald-50/70 flex items-center justify-center gap-1.5 text-xs md:text-sm font-bold text-emerald-800">
+                  <span>مجموع النقاط</span>
+                  <span className="font-mono font-black text-sm md:text-base text-emerald-900 mr-1">
+                    {scoreFormatted}
+                  </span>
+                  <span className="text-xs font-semibold">نقطة</span>
+                </div>
+              ) : (
+                <div className="card-date border border-slate-300 rounded-lg py-2.5 px-3 bg-slate-50/90 flex items-center justify-center gap-1.5 text-xs font-bold text-slate-700">
+                  <span>تاريخ الترشح</span>
+                  <span className="font-mono mr-1">{data.created_at || '-'}</span>
                 </div>
               )}
             </div>
-          </div>
+          </header>
 
-          {/* ══ I - Informations personnelles ══ */}
-          <h3 className="section-title text-xl font-semibold text-gray-700 mb-3">
-            I- الهوية والمعلومات الشخصية
-          </h3>
-          <table className="info-table w-full text-right border border-gray-200 bg-white mb-4">
-            <tbody>
-              {Object.entries(personalRows).map(([label, value]) => (
-                <tr key={label}>
-                  <th className="py-1 px-3 bg-gray-100 w-2/5">{label}</th>
-                  <td className="py-1 px-3">
-                    {label === 'رمز المناظرة المزمع المشاركة فيها' ? (
-                      <span>
-                        <strong className="font-black text-base md:text-lg text-gray-900">{data.position}</strong>
-                        {data.position_name && (
-                          <span className="font-medium text-gray-700"> - {data.position_name}</span>
-                        )}
-                      </span>
-                    ) : (
-                      value ?? ''
-                    )}
+          {/* ══════════════════════════════════════════════════════════════
+              SECTION I: IDENTITY & PERSONAL INFO
+             ══════════════════════════════════════════════════════════════ */}
+          <section className="section-block mb-5">
+            <h2 className="section-heading text-xs md:text-sm font-extrabold text-white bg-teal-800 py-1.5 px-4 rounded-t flex items-center justify-between">
+              <span>I. الهوية والمعلومات الشخصية</span>
+            </h2>
+
+            <table className="doc-table w-full text-right text-xs md:text-sm border border-slate-300 border-t-0">
+              <tbody>
+                <tr>
+                  <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                    الاسم واللقب:
+                  </th>
+                  <td className="cell-value w-[30%] border border-slate-300 py-2.5 px-3 font-bold text-slate-950">
+                    {data.name || '-'}
+                  </td>
+                  <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                    الجنس:
+                  </th>
+                  <td className="cell-value w-[30%] border border-slate-300 py-2.5 px-3 font-bold text-slate-950">
+                    {data.gender || '-'}
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+                <tr>
+                  <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                    رقم ب.ت.و:
+                  </th>
+                  <td className="cell-value border border-slate-300 py-2.5 px-3 font-mono font-bold text-slate-950">
+                    {data.cin || '-'}
+                  </td>
+                  <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                    تاريخ الإصدار:
+                  </th>
+                  <td className="cell-value border border-slate-300 py-2.5 px-3 font-mono font-bold text-slate-950">
+                    {data.cin_date || '-'}
+                  </td>
+                </tr>
+                <tr>
+                  <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                    تاريخ الولادة:
+                  </th>
+                  <td className="cell-value border border-slate-300 py-2.5 px-3 font-mono font-bold text-slate-950">
+                    {data.birth_date || '-'}
+                  </td>
+                  <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                    رقم الهاتف:
+                  </th>
+                  <td className="cell-value border border-slate-300 py-2.5 px-3 font-mono font-bold text-slate-950">
+                    {data.tel || '-'}
+                  </td>
+                </tr>
+                <tr>
+                  <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                    العنوان:
+                  </th>
+                  <td className="cell-value border border-slate-300 py-2.5 px-3 font-bold text-slate-950">
+                    {data.address || '-'}
+                  </td>
+                  <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                    الترقيم البريدي:
+                  </th>
+                  <td className="cell-value border border-slate-300 py-2.5 px-3 font-mono font-bold text-slate-950">
+                    {data.postal_code || '-'}
+                  </td>
+                </tr>
+                <tr>
+                  <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                    الولاية / المعتمدية:
+                  </th>
+                  <td className="cell-value border border-slate-300 py-2.5 px-3 font-bold text-slate-950">
+                    {trimDash(`${data.governorate || ''} ـــ ${data.city || ''}`) || '-'}
+                  </td>
+                  <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                    البريد الإلكتروني:
+                  </th>
+                  <td className="cell-value border border-slate-300 py-2.5 px-3 font-mono text-xs font-bold text-slate-950">
+                    {data.email || '-'}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
 
-          {/* ══ II - Cadre / Technicien ══ */}
-          {isCadreOrTechnicien && (
+          {/* ══════════════════════════════════════════════════════════════
+              SECTION II & III: PROFILE SPECIFIC
+             ══════════════════════════════════════════════════════════════ */}
+
+          {/* ─── PROFILE 1: CADRES (01 à 15 : إطارات) ─── */}
+          {isCadre && (
             <>
-              <h3 className="section-title text-xl font-semibold text-gray-700 mt-5 mb-3">
-                II- المستوى التعليمي
-              </h3>
-              <table className="info-table w-full text-right border border-gray-200 bg-white mb-4">
-                <tbody>
-                  {data.degree && (
+              <section className="section-block mb-5">
+                <h2 className="section-heading text-xs md:text-sm font-extrabold text-white bg-teal-800 py-1.5 px-4 rounded-t flex items-center justify-between">
+                  <span>II. المستوى التعليمي</span>
+                </h2>
+                <table className="doc-table w-full text-right text-xs md:text-sm border border-slate-300 border-t-0">
+                  <tbody>
                     <tr>
-                      <th className="py-1 px-3 bg-gray-100 w-2/5">الشهادة العلمية</th>
-                      <td className="py-1 px-3">{data.degree}</td>
+                      <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        الشهادة العلمية:
+                      </th>
+                      <td className="cell-value w-[30%] border border-slate-300 py-2.5 px-3 font-bold text-slate-950">
+                        {data.degree || '-'}
+                      </td>
+                      <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        الاختصاص:
+                      </th>
+                      <td className="cell-value w-[30%] border border-slate-300 py-2.5 px-3 font-bold text-slate-950">
+                        {data.specialty || '-'}
+                      </td>
                     </tr>
-                  )}
-                  <tr>
-                    <th className="py-1 px-3 bg-gray-100 w-2/5">الاختصاص</th>
-                    <td className="py-1 px-3">{data.specialty ?? '-'}</td>
-                  </tr>
-                  <tr>
-                    <th className="py-1 px-3 bg-gray-100 w-2/5">سنة التخرج</th>
-                    <td className="py-1 px-3">{data.graduation_year ?? '-'}</td>
-                  </tr>
-                  <tr>
-                    <th className="py-1 px-3 bg-gray-100 w-2/5">قرار وتاريخ المعادلة</th>
-                    <td className="py-1 px-3">
-                      {[data.equivalence_decision, data.equivalence_date].filter(Boolean).join(' - ') || '-'}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                    <tr>
+                      <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        سنة التخرج:
+                      </th>
+                      <td className="cell-value border border-slate-300 py-2.5 px-3 font-mono font-bold text-slate-950">
+                        {data.graduation_year || '-'}
+                      </td>
+                      <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        المؤسسة الجامعية:
+                      </th>
+                      <td className="cell-value border border-slate-300 py-2.5 px-3 font-bold text-slate-950">
+                        {data.institution || 'مؤسسة تعليم عال عمومية'}
+                      </td>
+                    </tr>
+                    {equivalenceText && (
+                      <tr>
+                        <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                          قرار وتاريخ المعادلة:
+                        </th>
+                        <td colSpan={3} className="cell-value border border-slate-300 py-2.5 px-3 text-slate-950 font-medium">
+                          {equivalenceText}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </section>
 
-              <h3 className="section-title text-xl font-semibold text-gray-700 mt-5 mb-3">
-                III- المعدلات المطلوبة
-              </h3>
-              <table className="info-table w-full text-right border border-gray-200 bg-white mb-4">
-                <tbody>
-                  <tr>
-                    <th className="py-1 px-3 bg-gray-100 w-2/5">{baseAvgLabel[baseAvgField] ?? 'المعدل الأساسي'}</th>
-                    <td className="py-1 px-3">{baseAvgValue}</td>
-                    <th className="py-1 px-3 bg-gray-100 w-1/5">معدل سنة التخرج</th>
-                    <td className="py-1 px-3">{data.grad_average ?? '-'}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <section className="section-block mb-5">
+                <h2 className="section-heading text-xs md:text-sm font-extrabold text-white bg-teal-800 py-1.5 px-4 rounded-t flex items-center justify-between">
+                  <span>III. النتائج ومقياس الفرز الأولي</span>
+                </h2>
+                <table className="doc-table w-full text-right text-xs md:text-sm border border-slate-300 border-t-0">
+                  <tbody>
+                    <tr>
+                      <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        معدل البكالوريا:
+                      </th>
+                      <td className="cell-value w-[30%] border border-slate-300 py-2.5 px-3 font-mono font-bold text-slate-950">
+                        {data.bac_average || '-'}
+                      </td>
+                      <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        معدل سنة التخرج:
+                      </th>
+                      <td className="cell-value w-[30%] border border-slate-300 py-2.5 px-3 font-mono font-bold text-slate-950">
+                        {data.grad_average || '-'}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        مجموع النقاط المحتسب:
+                      </th>
+                      <td className="cell-value border border-slate-300 py-2.5 px-3 font-mono font-black text-teal-800 text-sm md:text-base">
+                        {scoreFormatted} نقطة
+                      </td>
+                      <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        صيغة الفرز الأولي (مجموع النقاط):
+                      </th>
+                      <td className="cell-value border border-slate-300 py-2.5 px-3 text-slate-950 font-medium text-xs">
+                        (معدل البكالوريا × 60%) + (معدل سنة التخرج × 40%)
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
             </>
           )}
 
-          {/* ══ II - Commis / Chauffeur / Nettoyage ══ */}
-          {isSchoolLevel && (
+          {/* ─── PROFILE 2: TECHNICIEN (16 : ملحق إدارة - BTP) ─── */}
+          {isTechnicien && (
             <>
-              <h3 className="section-title text-xl font-semibold text-gray-700 mt-5 mb-3">
-                II- المستوى الدراسي
-              </h3>
-              <table className="info-table w-full text-right border border-gray-200 bg-white mb-4">
-                <tbody>
-                  <tr>
-                    <th className="py-1 px-3 bg-gray-100 w-2/5">المستوى الدراسي</th>
-                    <td className="py-1 px-3">{data.school_level ?? '-'}</td>
-                  </tr>
-                  <tr>
-                    <th className="py-1 px-3 bg-gray-100 w-2/5">{baseAvgLabel[baseAvgField] ?? 'المعدل الأساسي'}</th>
-                    <td className="py-1 px-3">{baseAvgValue}</td>
-                  </tr>
-                  {isChauffeur && (
-                    <>
+              <section className="section-block mb-5">
+                <h2 className="section-heading text-xs md:text-sm font-extrabold text-white bg-teal-800 py-1.5 px-4 rounded-t flex items-center justify-between">
+                  <span>II. المستوى التعليمي والتكويني</span>
+                </h2>
+                <table className="doc-table w-full text-right text-xs md:text-sm border border-slate-300 border-t-0">
+                  <tbody>
+                    <tr>
+                      <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        الشهادة المطلوبة:
+                      </th>
+                      <td className="cell-value w-[30%] border border-slate-300 py-2.5 px-3 font-bold text-slate-950">
+                        مؤهل التقني السامي (BTP)
+                      </td>
+                      <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        الاختصاص:
+                      </th>
+                      <td className="cell-value w-[30%] border border-slate-300 py-2.5 px-3 font-bold text-slate-950">
+                        {data.specialty || 'مساعد مديرية'}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        سنة التخرج:
+                      </th>
+                      <td className="cell-value border border-slate-300 py-2.5 px-3 font-mono font-bold text-slate-950">
+                        {data.graduation_year || '-'}
+                      </td>
+                      <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        مركز التكوين المهني:
+                      </th>
+                      <td className="cell-value border border-slate-300 py-2.5 px-3 font-bold text-slate-950">
+                        {data.institution || 'مركز تكوين مهني عمومي'}
+                      </td>
+                    </tr>
+                    {equivalenceText && (
                       <tr>
-                        <th className="py-1 px-3 bg-gray-100 w-2/5">صنف رخصة القيادة</th>
-                        <td className="py-1 px-3">{data.driving_license_category ?? '-'}</td>
+                        <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                          قرار وتاريخ المعادلة:
+                        </th>
+                        <td colSpan={3} className="cell-value border border-slate-300 py-2.5 px-3 text-slate-950 font-medium">
+                          {equivalenceText}
+                        </td>
                       </tr>
-                      <tr>
-                        <th className="py-1 px-3 bg-gray-100 w-2/5">تاريخ رخصة القيادة</th>
-                        <td className="py-1 px-3">{data.driving_license_date ?? '-'}</td>
-                      </tr>
-                    </>
-                  )}
-                </tbody>
-              </table>
+                    )}
+                  </tbody>
+                </table>
+              </section>
+
+              <section className="section-block mb-5">
+                <h2 className="section-heading text-xs md:text-sm font-extrabold text-white bg-teal-800 py-1.5 px-4 rounded-t flex items-center justify-between">
+                  <span>III. النتائج ومقياس الفرز الأولي</span>
+                </h2>
+                <table className="doc-table w-full text-right text-xs md:text-sm border border-slate-300 border-t-0">
+                  <tbody>
+                    <tr>
+                      <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        معدل مؤهل التقني / البكالوريا:
+                      </th>
+                      <td className="cell-value w-[30%] border border-slate-300 py-2.5 px-3 font-mono font-bold text-slate-950">
+                        {data.btp_average || data.bac_average || '-'}
+                      </td>
+                      <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        معدل سنة التخرج:
+                      </th>
+                      <td className="cell-value w-[30%] border border-slate-300 py-2.5 px-3 font-mono font-bold text-slate-950">
+                        {data.grad_average || '-'}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        مجموع النقاط المحتسب:
+                      </th>
+                      <td className="cell-value border border-slate-300 py-2.5 px-3 font-mono font-black text-teal-800 text-sm md:text-base">
+                        {scoreFormatted} نقطة
+                      </td>
+                      <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        صيغة الفرز الأولي (مجموع النقاط):
+                      </th>
+                      <td className="cell-value border border-slate-300 py-2.5 px-3 text-slate-950 font-medium text-xs">
+                        (معدل البكالوريا أو مؤهل التقني المهني × 40%) + (معدل سنة التخرج × 60%)
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
             </>
           )}
 
-          {/* ── Signature ── */}
-          <div className="signature-area mt-10">
-            <div className="border-2 border-dashed border-gray-400 p-6 text-center" style={{ width: '45%' }}>
-              <p className="text-gray-700 font-semibold mb-12">الإمضاء</p>
-            </div>
-          </div>
+          {/* ─── PROFILE 3: COMMIS (17 & 18 : مستكتب إدارة) ─── */}
+          {isCommis && (
+            <>
+              <section className="section-block mb-5">
+                <h2 className="section-heading text-xs md:text-sm font-extrabold text-white bg-teal-800 py-1.5 px-4 rounded-t flex items-center justify-between">
+                  <span>II. المستوى الدراسي والتكوين</span>
+                </h2>
+                <table className="doc-table w-full text-right text-xs md:text-sm border border-slate-300 border-t-0">
+                  <tbody>
+                    <tr>
+                      <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        المستوى المصرح به:
+                      </th>
+                      <td colSpan={3} className="cell-value border border-slate-300 py-2.5 px-3 font-bold text-slate-950">
+                        <span>{data.school_level || '-'}</span>
+                        <span className="text-slate-500 font-normal mr-2 text-xs">
+                          (الشروط: أدناه التاسعة أساسي بنجاح وأقصاه الرابعة ثانوي منهاة نظام جديد)
+                        </span>
+                      </td>
+                    </tr>
+                    {(data.school_institution || data.end_school_year) && (
+                      <tr>
+                        <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                          المؤسسة التعليمية / المعهد:
+                        </th>
+                        <td className="cell-value border border-slate-300 py-2.5 px-3 font-bold text-slate-950">
+                          {data.school_institution || '-'}
+                        </td>
+                        <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                          سنة الانقطاع:
+                        </th>
+                        <td className="cell-value border border-slate-300 py-2.5 px-3 font-mono font-bold text-slate-950">
+                          {data.end_school_year || '-'}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </section>
 
-        </div>{/* end card */}
+              <section className="section-block mb-5">
+                <h2 className="section-heading text-xs md:text-sm font-extrabold text-white bg-teal-800 py-1.5 px-4 rounded-t flex items-center justify-between">
+                  <span>III. النتائج ومقياس الفرز الأولي</span>
+                </h2>
+                <table className="doc-table w-full text-right text-xs md:text-sm border border-slate-300 border-t-0">
+                  <tbody>
+                    <tr>
+                      <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        معدل السنة التاسعة أساسي:
+                      </th>
+                      <td className="cell-value w-[30%] border border-slate-300 py-2.5 px-3 font-mono font-bold text-slate-950">
+                        {data.grade_9_average ? `${data.grade_9_average} / 20` : '-'}
+                      </td>
+                      <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        مجموع النقاط المحتسب:
+                      </th>
+                      <td className="cell-value w-[30%] border border-slate-300 py-2.5 px-3 font-mono font-black text-teal-800 text-sm md:text-base">
+                        {scoreFormatted} نقطة
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        صيغة الفرز الأولي المعتمدة:
+                      </th>
+                      <td colSpan={3} className="cell-value border border-slate-300 py-2.5 px-3 text-slate-900 text-xs leading-relaxed">
+                        معدل السنة التاسعة من التعليم الأساسي + 1 نقطة عن كل سنة دراسية تفوق المستوى الأدنى المطلوب (في حدود 4 سنوات كحد أقصى).
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+            </>
+          )}
+
+          {/* ─── PROFILE 4: CHAUFFEUR (19 : سائق) ─── */}
+          {isChauffeur && (
+            <>
+              <section className="section-block mb-5">
+                <h2 className="section-heading text-xs md:text-sm font-extrabold text-white bg-teal-800 py-1.5 px-4 rounded-t flex items-center justify-between">
+                  <span>II. المستوى الدراسي وبيانات رخصة السياقة</span>
+                </h2>
+                <table className="doc-table w-full text-right text-xs md:text-sm border border-slate-300 border-t-0">
+                  <tbody>
+                    <tr>
+                      <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        المستوى المصرح به:
+                      </th>
+                      <td colSpan={3} className="cell-value border border-slate-300 py-2.5 px-3 font-bold text-slate-950">
+                        <span>{data.school_level || '-'}</span>
+                        <span className="text-slate-500 font-normal mr-2 text-xs">
+                          (الشروط: أدناه التاسعة أساسي بنجاح وأقصاه الرابعة ثانوي منهاة ودون نجاح)
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        صنف رخصة السياقة:
+                      </th>
+                      <td className="cell-value border border-slate-300 py-2.5 px-3 font-bold text-slate-950">
+                        {data.driving_license_category || 'صنف ب (B)'}
+                      </td>
+                      <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        تاريخ الحصول على الرخصة:
+                      </th>
+                      <td className="cell-value border border-slate-300 py-2.5 px-3 font-mono font-bold text-slate-950">
+                        {data.driving_license_date || '-'}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        شرط الأقدمية في السياقة:
+                      </th>
+                      <td colSpan={3} className="cell-value border border-slate-300 py-2.5 px-3 text-slate-900 font-semibold text-xs">
+                        متحصل على رخصة السياقة منذ سنتين على الأقل بتاريخ آخر أجل لقبول الترشحات (شرط وجوبي).
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+
+              <section className="section-block mb-5">
+                <h2 className="section-heading text-xs md:text-sm font-extrabold text-white bg-teal-800 py-1.5 px-4 rounded-t flex items-center justify-between">
+                  <span>III. النتائج ومقياس الفرز الأولي</span>
+                </h2>
+                <table className="doc-table w-full text-right text-xs md:text-sm border border-slate-300 border-t-0">
+                  <tbody>
+                    <tr>
+                      <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        معدل السنة التاسعة أساسي:
+                      </th>
+                      <td className="cell-value w-[30%] border border-slate-300 py-2.5 px-3 font-mono font-bold text-slate-950">
+                        {data.grade_9_average ? `${data.grade_9_average} / 20` : '-'}
+                      </td>
+                      <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        مجموع النقاط المحتسب:
+                      </th>
+                      <td className="cell-value w-[30%] border border-slate-300 py-2.5 px-3 font-mono font-black text-teal-800 text-sm md:text-base">
+                        {scoreFormatted} نقطة
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        صيغة الفرز الأولي المعتمدة:
+                      </th>
+                      <td colSpan={3} className="cell-value border border-slate-300 py-2.5 px-3 text-slate-900 text-xs leading-relaxed">
+                        معدل السنة التاسعة من التعليم الأساسي + 1 نقطة عن كل سنة دراسية تفوق المستوى الأدنى المطلوب.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+            </>
+          )}
+
+          {/* ─── PROFILE 5: NETTOYAGE (20 & 21 : عون تنظيف) ─── */}
+          {isNettoyage && (
+            <>
+              <section className="section-block mb-5">
+                <h2 className="section-heading text-xs md:text-sm font-extrabold text-white bg-teal-800 py-1.5 px-4 rounded-t flex items-center justify-between">
+                  <span>II. المستوى الدراسي والتكوين</span>
+                </h2>
+                <table className="doc-table w-full text-right text-xs md:text-sm border border-slate-300 border-t-0">
+                  <tbody>
+                    <tr>
+                      <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        المستوى المصرح به:
+                      </th>
+                      <td colSpan={3} className="cell-value border border-slate-300 py-2.5 px-3 font-bold text-slate-950">
+                        <span>{data.school_level || '-'}</span>
+                        <span className="text-slate-500 font-normal mr-2 text-xs">
+                          (الشروط: أدناه السادسة أساسي بنجاح وأقصاه التاسعة أساسي منهاة ودون نجاح)
+                        </span>
+                      </td>
+                    </tr>
+                    {(data.school_institution || data.end_school_year) && (
+                      <tr>
+                        <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                          المؤسسة التعليمية:
+                        </th>
+                        <td className="cell-value border border-slate-300 py-2.5 px-3 font-bold text-slate-950">
+                          {data.school_institution || '-'}
+                        </td>
+                        <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                          سنة الانقطاع:
+                        </th>
+                        <td className="cell-value border border-slate-300 py-2.5 px-3 font-mono font-bold text-slate-950">
+                          {data.end_school_year || '-'}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </section>
+
+              <section className="section-block mb-5">
+                <h2 className="section-heading text-xs md:text-sm font-extrabold text-white bg-teal-800 py-1.5 px-4 rounded-t flex items-center justify-between">
+                  <span>III. النتائج ومقياس الفرز الأولي</span>
+                </h2>
+                <table className="doc-table w-full text-right text-xs md:text-sm border border-slate-300 border-t-0">
+                  <tbody>
+                    <tr>
+                      <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        معدل السنة السادسة أساسي:
+                      </th>
+                      <td className="cell-value w-[30%] border border-slate-300 py-2.5 px-3 font-mono font-bold text-slate-950">
+                        {data.grade_6_average ? `${data.grade_6_average} / 20` : '-'}
+                      </td>
+                      <th className="cell-label w-[20%] bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        مجموع النقاط المحتسب:
+                      </th>
+                      <td className="cell-value w-[30%] border border-slate-300 py-2.5 px-3 font-mono font-black text-teal-800 text-sm md:text-base">
+                        {scoreFormatted} نقطة
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="cell-label bg-slate-50 font-bold border border-slate-300 py-2.5 px-3 text-slate-800">
+                        صيغة الفرز الأولي المعتمدة:
+                      </th>
+                      <td colSpan={3} className="cell-value border border-slate-300 py-2.5 px-3 text-slate-900 text-xs leading-relaxed">
+                        معدل السنة السادسة أساسي + 1 نقطة عن كل سنة دراسية تفوق المستوى الأدنى المطلوب (في حدود 3 سنوات كحد أقصى).
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+            </>
+          )}
+
+          {/* ══════════════════════════════════════════════════════════════
+              FOOTER: DECLARATION & SIGNATURE
+             ══════════════════════════════════════════════════════════════ */}
+          <footer className="footer-section mt-5 pt-2 flex-1 flex flex-col justify-between">
+            <div>
+              {/* Legal Declaration */}
+              <div className="text-xs leading-relaxed text-slate-800 mb-2">
+                <span className="font-extrabold text-slate-950">⚖️ تصريح بالشرف: </span>
+                <span>أصرح بشرفي بصحة ودقة كافة البيانات والمعلومات المصرح بها أعلاه في هذه الاستمارة، وأتحمل كامل المسؤولية الإدارية والجزائية في صورة الإدلاء ببيانات خاطئة أو غير مطابقة للوثائق الرسمية.</span>
+              </div>
+
+              <div className="text-xs font-bold text-amber-800 mb-4">
+                * ملاحظة: تُسحب هذه الاستمارة وتُوقَّع وتُرفق وجوباً بملف الترشح الورقي عند القبول في مرحلة الفرز الأولي.
+              </div>
+
+              {/* Signature Area (Left aligned with generous space below) */}
+              <div className="w-full text-left pl-6 pt-2 pb-24 md:pb-36">
+                <span className="font-bold text-slate-950 text-xs md:text-sm">
+                  إمضاء المترشح(ة):
+                </span>
+              </div>
+            </div>
+
+            {/* Document extraction timestamp at bottom */}
+            <div className="mt-auto pt-2 border-t border-slate-200 flex justify-between text-[10px] text-slate-500 font-mono">
+              <span>منظومة الترشح للمناظرات الخارجية</span>
+              <span>تاريخ وتوقيت التسجيل على الموقع: {data.created_at || new Date().toLocaleString('fr-FR')}</span>
+            </div>
+          </footer>
+
+        </div>
       </div>
 
-      {/* ══ Styles ══ */}
-      <style>{`
-        /* ── Screen layout ── */
-        .header-top {
-          display: flex;
-          flex-direction: row;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 16px;
-          margin-bottom: 12px;
-        }
-        .contest-title { flex: 1; text-align: center; }
-        .ministry-info { text-align: right; min-width: 160px; }
-        .category-box-wrapper { min-width: 140px; }
-        .header-bottom {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .info-table tbody tr { border-bottom: 1px solid #e5e7eb; }
-        .info-table th { font-weight: 500; background: #f3f4f6; }
-        .section-title { margin-top: 20px; }
+      {/* ── Screen Footer Signature ── */}
+      <footer className="no-print max-w-4xl mx-auto text-center text-xs text-sky-600 font-medium py-4 pb-8" dir="ltr">
+        © Powered by <span className="font-semibold text-sky-700">E..E.E. Bouzekri</span> - <span className="font-semibold text-sky-700">DSI-CNFCPP</span> August 2026
+      </footer>
 
-        /* ── Print / PDF ── */
+      {/* ══════════════════════════════════════════════════════════════
+          PRINT & DISPLAY STYLES
+         ══════════════════════════════════════════════════════════════ */}
+      <style>{`
         @media print {
           * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
 
-          .no-print, .goog {
+          .no-print {
             display: none !important;
           }
 
-          body {
-            font-size: 11px !important;
+          html, body {
             background: white !important;
-            margin: 0;
+            color: #0f172a !important;
+            font-size: 13px !important;
+            line-height: 1.5 !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
 
           @page {
             size: A4 portrait;
-            margin: 12mm 10mm;
+            margin: 10mm 12mm 10mm 12mm;
           }
 
-          .print-card {
+          .sheet-card {
+            border: none !important;
             box-shadow: none !important;
-            border-radius: 0 !important;
             padding: 0 !important;
-          }
-
-          .header-top {
+            margin: 0 !important;
+            width: 100% !important;
+            min-height: 272mm !important;
             display: flex !important;
-            flex-direction: row !important;
-            justify-content: space-between !important;
-            align-items: flex-start !important;
-            gap: 8px !important;
-          }
-
-          .header-bottom {
-            display: flex !important;
+            flex-direction: column !important;
             justify-content: space-between !important;
           }
 
-          .info-table {
+          .header-box {
+            margin-bottom: 14px !important;
+            padding-bottom: 8px !important;
+          }
+
+          .title-col h1 {
+            font-size: 15px !important;
+            line-height: 1.35 !important;
+          }
+
+          .title-col div {
+            font-size: 12px !important;
+          }
+
+          .logo-col {
+            justify-content: flex-end !important;
+            text-align: left !important;
+          }
+
+          .logo-col img {
+            height: 90px !important;
+            max-height: 90px !important;
+            margin-right: auto !important;
+            margin-left: 0 !important;
+          }
+
+          .top-cards-bar {
+            margin-top: 12px !important;
+            margin-bottom: 14px !important;
+            gap: 10px !important;
+          }
+
+          .top-cards-bar > div {
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+          }
+
+          .section-block {
+            margin-bottom: 15px !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+
+          .section-heading {
+            font-size: 13.5px !important;
+            padding: 5px 12px !important;
+            background-color: #115e59 !important;
+            color: #ffffff !important;
+            font-weight: 800 !important;
+          }
+
+          .doc-table {
             width: 100% !important;
             border-collapse: collapse !important;
-            page-break-inside: avoid;
+            border: 1px solid #94a3b8 !important;
           }
 
-          .info-table th,
-          .info-table td {
-            padding: 3px 6px !important;
-            border: 1px solid #d1d5db !important;
-            background: transparent;
+          .doc-table th,
+          .doc-table td {
+            border: 1px solid #cbd5e1 !important;
+            padding: 7px 12px !important;
+            font-size: 12.5px !important;
+            line-height: 1.45 !important;
           }
 
-          .info-table th {
-            background-color: #f3f4f6 !important;
+          .doc-table th {
+            background-color: #f8fafc !important;
+            font-weight: 700 !important;
+            color: #1e293b !important;
           }
 
-          .section-title {
-            font-size: 13px !important;
-            margin-top: 10px !important;
-            margin-bottom: 4px !important;
-          }
-
-          .category-box {
-            min-width: 110px !important;
-            border: 2px solid black !important;
-            padding: 3px !important;
-          }
-
-          .category-box-title {
-            font-size: 10px !important;
-            font-weight: 600 !important;
-          }
-
-          .category-box-ref {
-            font-size: 16px !important;
-            font-weight: 900 !important;
-          }
-
-          .reg-box, .score-box {
-            border: 2px solid black !important;
-            font-size: 11px !important;
-          }
-
-          .signature-area {
-            margin-top: 20px !important;
+          .footer-section {
+            margin-top: 16px !important;
+            padding-top: 8px !important;
+            flex: 1 1 auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
         }
       `}</style>
     </div>
   )
+}
+
+function trimDash(str: string): string {
+  return str.replace(/^[\sـ-]+|[\sـ-]+$/g, '')
 }

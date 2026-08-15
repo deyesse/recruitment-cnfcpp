@@ -27,8 +27,10 @@ Route::get('/', function () {
             'type' => $pos->type,
             'degree' => $pos->degree,
             'specialty' => $pos->specialty,
+            'min_age' => $pos->contestType?->min_age,
             'max_age' => $pos->contestType?->max_age,
             'age_reference_date' => $pos->contestType?->age_reference_date?->format('Y-m-d'),
+            'driving_license_min_years' => $pos->contestType?->driving_license_min_years ?? 2,
             'school_levels' => $pos->contestType?->school_levels ?? [],
         ];
     })->toArray();
@@ -72,8 +74,14 @@ Route::post('/unlock-test-mode', function (\Illuminate\Http\Request $request) {
 });
 
 Route::get('/success', function () {
+    $data = session('data') ?? [];
+    if (! isset($data['logo_url'])) {
+        $contest = \App\Models\Contest::query()->where('ends_at', '>', now())->first()
+            ?? (isset($data['contest_id']) ? \App\Models\Contest::find($data['contest_id']) : null);
+        $data['logo_url'] = $contest?->logo_path ? asset('storage/' . $contest->logo_path) : asset('cnfcpp.png');
+    }
     return Inertia::render('success', [
-        'data' => session('data') ?? [],
+        'data' => $data,
     ]);
 });
 
@@ -93,14 +101,17 @@ Route::post('/apply', function (ApplicationRequest $request) {
     $validated['contest_name'] = $contest?->name;
     $validated['show_score'] = (bool) ($contest?->show_score ?? true);
     $validated['header_text'] = $contest?->header_text;
+    $validated['logo_url'] = $contest?->logo_path ? asset('storage/' . $contest->logo_path) : asset('cnfcpp.png');
     $positionModel = Position::where('code', $validated['position'])->with('contestType')->first();
     $validated['position_name'] = $positionModel?->name;
-    $validated['position_type'] = $positionModel?->type ?? 'cadre';
+    $validated['position_type'] = $positionModel?->type ?? ($positionModel?->contestType?->code ?? 'cadre');
     $validated['base_average_field'] = $positionModel?->contestType?->base_average_field ?? 'bac_average';
+    $validated['min_score'] = $positionModel?->contestType?->min_score ?? 12.0;
 
-    $app = \App\Models\Application::create(Arr::except($validated, ['agreement', 'contest_name', 'show_score', 'header_text']));
+    $app = \App\Models\Application::create(Arr::except($validated, ['agreement', 'contest_name', 'show_score', 'header_text', 'logo_url']));
     $validated['id'] = $app->id;
     $validated['score'] = $app->score;
+    $validated['created_at'] = $app->created_at?->format('d/m/Y H:i') ?? now()->format('d/m/Y H:i');
 
     // Format dates in French format (d/m/Y) for presentation
     foreach (['birth_date', 'cin_date', 'equivalence_date', 'driving_license_date'] as $dateField) {
@@ -168,10 +179,12 @@ Route::post('/reprint', function (\Illuminate\Http\Request $request) {
         'contest_name' => $contestName,
         'show_score' => $showScore,
         'header_text' => $contest?->header_text,
+        'logo_url' => $contest?->logo_path ? asset('storage/' . $contest->logo_path) : asset('cnfcpp.png'),
         'position' => (string) $app->position,
         'position_name' => $posName,
-        'position_type' => $positionForReprint?->type ?? 'cadre',
+        'position_type' => $positionForReprint?->type ?? ($positionForReprint?->contestType?->code ?? 'cadre'),
         'base_average_field' => $positionForReprint?->contestType?->base_average_field ?? 'bac_average',
+        'min_score' => $positionForReprint?->contestType?->min_score ?? 12.0,
         'name' => $app->name,
         'gender' => $app->gender,
         'birth_date' => $app->birth_date?->format('d/m/Y'),
@@ -187,6 +200,7 @@ Route::post('/reprint', function (\Illuminate\Http\Request $request) {
         'degree' => $app->degree,
         'specialty' => $app->specialty,
         'graduation_year' => $app->graduation_year,
+        'institution' => $app->institution,
         'equivalence_decision' => $app->equivalence_decision,
         'equivalence_date' => $app->equivalence_date?->format('d/m/Y'),
         'bac_average' => $app->bac_average,
@@ -194,12 +208,15 @@ Route::post('/reprint', function (\Illuminate\Http\Request $request) {
         'grad_average' => $app->grad_average,
         // Commis / Chauffeur / Nettoyage fields
         'school_level' => $app->school_level,
+        'end_school_year' => $app->end_school_year,
+        'school_institution' => $app->school_institution,
         'grade_9_average' => $app->grade_9_average,
         'grade_6_average' => $app->grade_6_average,
         // Chauffeur fields
         'driving_license_category' => $app->driving_license_category,
         'driving_license_date' => $app->driving_license_date?->format('d/m/Y'),
         'score' => $app->calculated_score ?? $app->calculateScore(),
+        'created_at' => $app->created_at?->format('d/m/Y H:i') ?? now()->format('d/m/Y H:i'),
     ];
 
     return Redirect::to('/success')->with(['data' => $data]);

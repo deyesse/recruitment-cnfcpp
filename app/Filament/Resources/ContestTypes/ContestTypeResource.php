@@ -20,11 +20,13 @@ class ContestTypeResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAdjustmentsHorizontal;
 
-    protected static ?string $navigationLabel = 'أنواع المناظرات';
+    protected static ?string $navigationLabel = 'أنواع المناظرات والمعايير';
 
     protected static ?string $modelLabel = 'نوع مناظرة';
 
     protected static ?string $pluralModelLabel = 'أنواع المناظرات';
+
+    protected static ?int $navigationSort = 4;
 
     public static function getModel(): string
     {

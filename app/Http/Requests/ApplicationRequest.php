@@ -147,17 +147,28 @@ class ApplicationRequest extends FormRequest
                 $pos = Position::where('code', $code)->first();
                 $contestType = $pos?->contestType;
 
-                // 1. Check Age Limit
+                // 1. Check Age Limit (Min & Max)
                 if ($birthDate && $contestType && ! $contestType->isAgeEligible($birthDate)) {
+                    $minAge = $contestType->min_age;
                     $maxAge = $contestType->max_age;
                     $refDate = $contestType->age_reference_date
                         ? $contestType->age_reference_date->format('d/m/Y')
                         : 'غرة جانفي';
 
-                    $validator->errors()->add(
-                        'birth_date',
-                        "عذراً، يتجاوز سن المترشح السن الأقصى المسموح به لهذه المناظرة ({$maxAge} سنة بتاريخ {$refDate})."
-                    );
+                    $refCarbon = $contestType->age_reference_date ?? now()->startOfYear();
+                    $candidateAge = \Carbon\Carbon::parse($birthDate)->diffInYears($refCarbon);
+
+                    if ($minAge && $candidateAge < $minAge) {
+                        $validator->errors()->add(
+                            'birth_date',
+                            "عذراً، سن المترشح ({$candidateAge} سنة) أقل من السن الأدنى المسموح به لهذا الصنف ({$minAge} سنة بتاريخ {$refDate})."
+                        );
+                    } elseif ($maxAge && $candidateAge > $maxAge) {
+                        $validator->errors()->add(
+                            'birth_date',
+                            "عذراً، يتجاوز سن المترشح ({$candidateAge} سنة) السن الأقصى المسموح به لهذا الصنف ({$maxAge} سنة بتاريخ {$refDate})."
+                        );
+                    }
                 }
 
                 // 2. Check Minimum Score Eligibility
@@ -172,6 +183,24 @@ class ApplicationRequest extends FormRequest
                         'bac_average',
                         "عذراً، مجموع النقاط المتحصل عليه ({$formattedScore}) دون الحد الأدنى المطلوب لقبول الترشح ({$formattedMin})."
                     );
+                }
+
+                // 3. Check Driving License Seniority (Configurable, default 2 years before reference date)
+                if ($code === '19' || ($pos && $pos->type === 'chauffeur') || ($contestType && $contestType->has_driving_license)) {
+                    $licenseDateInput = $this->input('driving_license_date');
+                    if ($licenseDateInput) {
+                        $minYears = $contestType?->driving_license_min_years ?? 2;
+                        $refCarbon = $contestType?->age_reference_date ?? ($contest?->ends_at ?? now());
+                        $licenseCarbon = \Carbon\Carbon::parse($licenseDateInput);
+
+                        if ($licenseCarbon->copy()->addYears($minYears)->isAfter($refCarbon)) {
+                            $refFormatted = \Carbon\Carbon::parse($refCarbon)->format('d/m/Y');
+                            $validator->errors()->add(
+                                'driving_license_date',
+                                "عذراً، يجب أن يكون المترشح متحصل على رخصة السياقة منذ {$minYears} سنوات على الأقل بتاريخ المرجع ({$refFormatted})."
+                            );
+                        }
+                    }
                 }
             }
         });

@@ -9,6 +9,8 @@ class ViewApplication extends ViewRecord
 {
     protected static string $resource = ApplicationResource::class;
 
+    protected string $view = 'filament.resources.applications.pages.view-application';
+
     protected function getHeaderActions(): array
     {
         return [

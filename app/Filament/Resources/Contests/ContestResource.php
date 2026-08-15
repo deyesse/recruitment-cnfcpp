@@ -18,9 +18,11 @@ class ContestResource extends Resource
 {
     protected static ?string $model = Contest::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTrophy;
+    protected static ?string $navigationLabel = "المناظرات";
     protected static ?string $modelLabel = "مناظرة";
     protected static ?string $pluralModelLabel = "مناظرات";
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $recordTitleAttribute = 'name';
 

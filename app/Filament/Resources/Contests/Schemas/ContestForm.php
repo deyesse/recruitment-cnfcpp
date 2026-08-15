@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Contests\Schemas;
 use App\Models\Position;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -27,12 +28,23 @@ class ContestForm
                             ->columnSpanFull(),
 
                         Textarea::make('header_text')
-                            ->label('نص الترويسة العليا للاستمارة المطبوعة (En-tête)')
+                            ->label('نص الترويسة العليا للاستمارة المطبوعة (En-tête - اليمين)')
                             ->rows(3)
-                            ->placeholder("الجمهورية التونسية\nوزارة التشغيل والتكوين المهني\nالمركز الوطني للتكوين المستمر والترقية المهنية")
-                            ->helperText('النص الرسمي الذي يظهر في أعلى الاستمارة المطبوعة (أدخل كل سطر في سطر مستقل)')
+                            ->placeholder("الجمهورية التونسية\nوزارة التشغيل والتكوين المهني\nالمركز الوطني لتكوين المكونين وهندسة التكوين")
+                            ->helperText('النص الرسمي الذي يظهر في أعلى يمين الاستمارة المطبوعة (كل سطر في سطر مستقل)')
                             ->hidden(fn () => ! auth()->user()?->isSuperAdmin())
-                            ->columnSpanFull(),
+                            ->columnSpan(1),
+
+                        FileUpload::make('logo_path')
+                            ->label('شعار المؤسسة (Logo - اليسار)')
+                            ->image()
+                            ->directory('contest-logos')
+                            ->visibility('public')
+                            ->imageResizeMode('contain')
+                            ->maxSize(2048)
+                            ->helperText('الشعار الذي سيظهر في أعلى يسار الاستمارة المطبوعة')
+                            ->hidden(fn () => ! auth()->user()?->isSuperAdmin())
+                            ->columnSpan(1),
 
                         DateTimePicker::make('starts_at')
                             ->format('Y-m-d H:i')

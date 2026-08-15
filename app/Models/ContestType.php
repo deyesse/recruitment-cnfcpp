@@ -21,10 +21,12 @@ class ContestType extends Model
             'has_degree'           => 'boolean',
             'has_school_level'     => 'boolean',
             'has_driving_license'  => 'boolean',
+            'driving_license_min_years' => 'integer',
             'has_age_bonus'        => 'boolean',
             // Champs de scoring par niveau scolaire
             'school_levels'        => 'array',   // [{label, extra_years}, ...]
             // Critère d'éligibilité par âge (pour TOUS les types)
+            'min_age'              => 'integer',
             'max_age'              => 'integer',
             'age_reference_date'   => 'date',
         ];
@@ -72,15 +74,15 @@ class ContestType extends Model
     }
 
     /**
-     * Vérifie si un candidat est éligible selon le critère d'âge.
+     * Vérifie si un candidat est éligible selon le critère d'âge (min et max).
      *
      * @param  string|\DateTimeInterface $birthDate  Date de naissance du candidat
-     * @return bool  true = éligible, false = trop âgé (rejeté)
+     * @return bool  true = éligible, false = hors limites (rejeté)
      */
     public function isAgeEligible(mixed $birthDate): bool
     {
-        if (! $this->max_age || ! $birthDate) {
-            return true; // Pas de limite d'âge définie → accepté
+        if (! $birthDate) {
+            return true; // Pas de date de naissance → accepté
         }
 
         $referenceDate = $this->age_reference_date
@@ -88,7 +90,15 @@ class ContestType extends Model
 
         $age = \Carbon\Carbon::parse($birthDate)->diffInYears($referenceDate);
 
-        return $age <= $this->max_age;
+        if ($this->min_age && $age < $this->min_age) {
+            return false;
+        }
+
+        if ($this->max_age && $age > $this->max_age) {
+            return false;
+        }
+
+        return true;
     }
 
     public function contests(): HasMany

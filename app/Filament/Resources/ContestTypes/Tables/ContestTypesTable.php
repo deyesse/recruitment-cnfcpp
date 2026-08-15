@@ -54,8 +54,14 @@ class ContestTypesTable
                     ->label('رخصة سياقة')
                     ->boolean(),
 
+                TextColumn::make('min_age')
+                    ->label('السن الأدنى')
+                    ->placeholder('بدون حد')
+                    ->formatStateUsing(fn ($state) => $state ? $state . ' سنة' : '—')
+                    ->sortable(),
+
                 TextColumn::make('max_age')
-                    ->label('الحد الأقصى للسن')
+                    ->label('السن الأقصى')
                     ->placeholder('بدون حد')
                     ->formatStateUsing(fn ($state) => $state ? $state . ' سنة' : '—')
                     ->sortable(),

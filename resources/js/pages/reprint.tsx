@@ -34,12 +34,12 @@ export default function Reprint() {
             <div className="sm:mx-auto sm:w-full sm:max-w-xl">
                 {/* Header Logo/Icon */}
                 <div className="flex justify-center mb-4">
-                    <div className="h-16 w-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-                        <Printer size={36} />
+                    <div className="h-16 w-16 bg-teal-700 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-teal-700/30">
+                        <Printer size={32} />
                     </div>
                 </div>
 
-                <h2 className="text-center text-3xl font-extrabold text-slate-900 leading-tight">
+                <h2 className="text-center text-3xl font-black text-slate-900 leading-tight">
                     إعادة طباعة استمارة الترشح
                 </h2>
                 <p className="mt-2 text-center text-sm font-medium text-slate-600">
@@ -48,7 +48,7 @@ export default function Reprint() {
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-xl">
-                <div className="bg-white py-8 px-6 shadow-xl rounded-2xl border border-slate-100 sm:px-10">
+                <div className="bg-white py-8 px-6 shadow-xl shadow-slate-200/50 rounded-2xl border border-slate-200/80 sm:px-10">
 
                     {/* Error Flash Message */}
                     {Object.keys(errors).length > 0 && (
@@ -65,7 +65,7 @@ export default function Reprint() {
                     <Form action="/reprint" method="POST" className="space-y-6">
                         {/* Field 1: CIN */}
                         <div>
-                            <label htmlFor="cin" className="block text-sm font-bold text-slate-700 mb-1">
+                            <label htmlFor="cin" className="block text-sm font-bold text-slate-700 mb-1.5">
                                 رقم بطاقة التعريف الوطنية <span className="text-red-500">*</span>
                             </label>
                             <div className="relative rounded-xl shadow-sm">
@@ -81,7 +81,7 @@ export default function Reprint() {
                                     value={data.cin}
                                     onChange={handleChange}
                                     placeholder="XXXXXXXX"
-                                    className="block w-full pr-10 pl-3 py-3 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono tracking-widest text-lg"
+                                    className="block w-full pr-10 pl-3 py-3 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 font-mono tracking-widest text-lg"
                                     dir="ltr"
                                 />
                             </div>
@@ -90,7 +90,7 @@ export default function Reprint() {
 
                         {/* Field 2: Phone */}
                         <div>
-                            <label htmlFor="tel" className="block text-sm font-bold text-slate-700 mb-1">
+                            <label htmlFor="tel" className="block text-sm font-bold text-slate-700 mb-1.5">
                                 رقم الهاتف الجوال <span className="text-red-500">*</span>
                             </label>
                             <div className="relative rounded-xl shadow-sm">
@@ -106,7 +106,7 @@ export default function Reprint() {
                                     value={data.tel}
                                     onChange={handleChange}
                                     placeholder="XXXXXXXX"
-                                    className="block w-full pr-10 pl-3 py-3 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono tracking-widest text-lg"
+                                    className="block w-full pr-10 pl-3 py-3 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 font-mono tracking-widest text-lg"
                                     dir="ltr"
                                 />
                             </div>
@@ -115,7 +115,7 @@ export default function Reprint() {
 
                         {/* Field 3: Registration Date (French format JJ/MM/AAAA) */}
                         <div>
-                            <label htmlFor="registration_date" className="block text-sm font-bold text-slate-700 mb-1">
+                            <label htmlFor="registration_date" className="block text-sm font-bold text-slate-700 mb-1.5">
                                 تاريخ التسجيل <span className="text-red-500">*</span>
                             </label>
                             <div className="relative rounded-xl shadow-sm flex items-center">
@@ -141,7 +141,7 @@ export default function Reprint() {
                                         }
                                     }}
                                     placeholder="JJ/MM/AAAA"
-                                    className="block w-full pr-10 pl-10 py-3 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-center tracking-wider text-base"
+                                    className="block w-full pr-10 pl-10 py-3 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 font-mono text-center tracking-wider text-base"
                                     dir="ltr"
                                 />
                                 <input
@@ -164,7 +164,7 @@ export default function Reprint() {
                         <div>
                             <button
                                 type="submit"
-                                className="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-xl shadow-md text-base font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                className="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-md text-base font-bold text-white bg-teal-700 hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-600 transition-all cursor-pointer"
                             >
                                 <Printer size={20} />
                                 <span>البحث وعرض الاستمارة للطباعة</span>
@@ -176,7 +176,7 @@ export default function Reprint() {
                     <div className="mt-6 text-center pt-4 border-t border-slate-100">
                         <a
                             href="/"
-                            className="inline-flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors"
+                            className="inline-flex items-center gap-2 text-sm font-bold text-teal-700 hover:text-teal-900 transition-colors"
                         >
                             <span>العودة لصفحة التسجيل الرئيسية</span>
                             <ArrowRight size={16} />
@@ -184,6 +184,10 @@ export default function Reprint() {
                     </div>
                 </div>
             </div>
+
+            <footer className="mt-8 text-center text-xs text-sky-600 font-medium py-4 border-t border-slate-200/60 sm:mx-auto sm:w-full sm:max-w-xl" dir="ltr">
+                © Powered by <span className="font-semibold text-sky-700">E..E.E. Bouzekri</span> - <span className="font-semibold text-sky-700">DSI-CNFCPP</span> August 2026
+            </footer>
         </div>
     );
 }
