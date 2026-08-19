@@ -17,23 +17,26 @@
     $isChauffeur = $posType === 'chauffeur';
     $isNettoyage = $posType === 'nettoyage';
 
-    if ($posNum >= 1 && $posNum <= 15) {
-        $catTitle = $posName ?: "المهندسين والمحللين\nوالمتصرفين";
+    if ($posName) {
+        $catTitle = $posName;
+        $catRef = "الخطة " . $posCode;
+    } elseif ($isCadre) {
+        $catTitle = "المهندسين والمحللين\nوالمتصرفين";
         $catRef = $posCode ?: "من 01 إلى 15";
-    } elseif ($posCode === '16') {
-        $catTitle = $posName ?: "ملحق إدارة\nمؤهل التقني السامي";
-        $catRef = "الخطة 16";
-    } elseif (in_array($posCode, ['17', '18'])) {
-        $catTitle = $posName ?: "مستكتب إدارة";
+    } elseif ($isTechnicien) {
+        $catTitle = "ملحق إدارة\nمؤهل التقني السامي";
+        $catRef = "الخطة " . ($posCode ?: "16");
+    } elseif ($isCommis) {
+        $catTitle = "مستكتب إدارة";
         $catRef = "الخطة " . ($posCode ?: "17 و 18");
-    } elseif ($posCode === '19') {
-        $catTitle = $posName ?: "سائق";
-        $catRef = "الخطة 19";
-    } elseif (in_array($posCode, ['20', '21'])) {
-        $catTitle = $posName ?: "عون تنظيف";
+    } elseif ($isChauffeur) {
+        $catTitle = "سائق";
+        $catRef = "الخطة " . ($posCode ?: "19");
+    } elseif ($isNettoyage) {
+        $catTitle = "عون تنظيف";
         $catRef = "الخطة " . ($posCode ?: "20 و 21");
     } else {
-        $catTitle = $posName ?: "خطة " . $posCode;
+        $catTitle = "خطة " . $posCode;
         $catRef = "الخطة " . $posCode;
     }
 @endphp

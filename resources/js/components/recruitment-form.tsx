@@ -67,6 +67,13 @@ export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
         ? positions.find((p: any) => (p.code || p) == data.position)
         : null;
 
+    const profileType = selectedPos?.type || (
+        ['17', '18'].includes(String(data.position)) ? 'commis' :
+        String(data.position) === '19' ? 'chauffeur' :
+        ['20', '21'].includes(String(data.position)) ? 'nettoyage' :
+        String(data.position) === '16' ? 'technicien' : 'cadre'
+    );
+
     let schoolLevelOptions: { value: string; label: string }[] = [];
     if (selectedPos) {
         if (Array.isArray(selectedPos.school_levels) && selectedPos.school_levels.length > 0) {
@@ -75,12 +82,11 @@ export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
                 label: item.label || item,
             }));
         } else {
-            const posCode = String(data.position);
-            if (['17', '18'].includes(posCode)) {
+            if (profileType === 'commis') {
                 schoolLevelOptions = SCHOOL_LEVEL_OPTIONS.commis || [];
-            } else if (posCode === '19') {
+            } else if (profileType === 'chauffeur') {
                 schoolLevelOptions = SCHOOL_LEVEL_OPTIONS.chauffeur || [];
-            } else if (['20', '21'].includes(posCode)) {
+            } else if (profileType === 'nettoyage') {
                 schoolLevelOptions = SCHOOL_LEVEL_OPTIONS.nettoyage || [];
             }
         }
@@ -109,7 +115,7 @@ export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
     }
 
     let licenseError: string | null = null;
-    if (selectedPos && (String(selectedPos.code) === '19' || selectedPos.type === 'chauffeur') && data.driving_license_date) {
+    if (selectedPos && (profileType === 'chauffeur' || selectedPos.has_driving_license) && data.driving_license_date) {
         const parts = data.driving_license_date.split('-');
         if (parts.length === 3 && parts[0].length === 4) {
             const minYears = selectedPos.driving_license_min_years !== undefined ? Number(selectedPos.driving_license_min_years) : 2;
@@ -135,14 +141,13 @@ export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
     let scoreError: string | null = null;
     const minScore = 12.0;
 
-    if (data.position) {
-        const posCode = String(data.position);
-        if (!['17', '18', '19', '20', '21'].includes(posCode)) {
+    if (data.position && selectedPos) {
+        if (profileType === 'cadre' || profileType === 'technicien') {
             const bac = parseFloat(data.bac_average);
             const grad = parseFloat(data.grad_average);
             if (!isNaN(bac) && !isNaN(grad)) {
-                const coeffBac = posCode === '16' ? 0.4 : 0.6;
-                const coeffGrad = posCode === '16' ? 0.6 : 0.4;
+                const coeffBac = profileType === 'technicien' ? 0.4 : 0.6;
+                const coeffGrad = profileType === 'technicien' ? 0.6 : 0.4;
                 calculatedScore = Math.round((bac * coeffBac + grad * coeffGrad) * 1000) / 1000;
                 if (calculatedScore < minScore) {
                     scoreError = `مجموع النقاط المحسوب (${calculatedScore.toFixed(2)}) أقل من الحد الأدنى المطلوب لقبول الترشح (12.00).`;
@@ -470,8 +475,8 @@ export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
 
-                            {/* TYPE 1: CADRES (Codes 01 - 15) */}
-                            {(!['16', '17', '18', '19', '20', '21'].includes(String(data.position))) && (
+                            {/* TYPE 1: CADRES */}
+                            {profileType === 'cadre' && (
                                 <>
                                     <div className="md:col-span-12">
                                         <InputGroup
@@ -566,8 +571,8 @@ export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
                                 </>
                             )}
 
-                            {/* TYPE 2: TECHNICIEN SUPERIEUR (Code 16) */}
-                            {(String(data.position) === '16') && (
+                            {/* TYPE 2: TECHNICIEN SUPERIEUR */}
+                            {profileType === 'technicien' && (
                                 <>
                                     <div className="md:col-span-12">
                                         <InputGroup
@@ -664,8 +669,8 @@ export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
                                 </>
                             )}
 
-                            {/* TYPE 3: COMMIS D'ADMINISTRATION (Codes 17, 18) */}
-                            {(['17', '18'].includes(String(data.position))) && (
+                            {/* TYPE 3: COMMIS D'ADMINISTRATION */}
+                            {profileType === 'commis' && (
                                 <>
                                     <div className="md:col-span-8">
                                         <SelectGroup
@@ -717,8 +722,8 @@ export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
                                 </>
                             )}
 
-                            {/* TYPE 4: CHAUFFEUR (Code 19) */}
-                            {(String(data.position) === '19') && (
+                            {/* TYPE 4: CHAUFFEUR */}
+                            {profileType === 'chauffeur' && (
                                 <>
                                     <div className="md:col-span-8">
                                         <SelectGroup
@@ -796,8 +801,8 @@ export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
                                 </>
                             )}
 
-                            {/* TYPE 5: NETTOYAGE (Codes 20, 21) */}
-                            {(['20', '21'].includes(String(data.position))) && (
+                            {/* TYPE 5: NETTOYAGE */}
+                            {profileType === 'nettoyage' && (
                                 <>
                                     <div className="md:col-span-8">
                                         <SelectGroup

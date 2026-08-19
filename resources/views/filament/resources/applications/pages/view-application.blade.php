@@ -1,14 +1,8 @@
 <x-filament-panels::page>
     @php
         $app = $this->record;
-        $pos = \App\Models\Position::where('code', (string) $app->position)->first();
-        $posNum = intval($app->position);
-        $posType = $pos?->type ?? (
-            $posNum >= 1 && $posNum <= 15 ? 'cadre' :
-            ($app->position == '16' ? 'technicien' :
-            (in_array((string) $app->position, ['17', '18']) ? 'commis' :
-            ((string) $app->position == '19' ? 'chauffeur' : 'nettoyage')))
-        );
+        $pos = \App\Models\Position::where('code', (string) $app->position)->with('contestType')->first();
+        $posType = $pos?->contestType?->code ?? $pos?->type ?? $app->getProfileType();
 
         $isCadre = $posType === 'cadre';
         $isTechnicien = $posType === 'technicien';

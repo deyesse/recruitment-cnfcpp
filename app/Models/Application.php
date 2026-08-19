@@ -21,9 +21,14 @@ class Application extends Model
 
     public function getProfileType(): string
     {
-        $pos = Position::where('code', (string) $this->position)->first();
-        if ($pos && $pos->type) {
-            return $pos->type;
+        $pos = Position::where('code', (string) $this->position)->with('contestType')->first();
+        if ($pos) {
+            if ($pos->contestType?->code) {
+                return $pos->contestType->code;
+            }
+            if ($pos->type) {
+                return $pos->type;
+            }
         }
         $posNum = intval($this->position);
         if ($posNum >= 1 && $posNum <= 15) return 'cadre';

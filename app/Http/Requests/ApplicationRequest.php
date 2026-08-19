@@ -25,6 +25,13 @@ class ApplicationRequest extends FormRequest
     public function rules(): array
     {
         $code = (string) $this->input('position');
+        $pos = Position::where('code', $code)->with('contestType')->first();
+        $type = $pos?->contestType?->code ?? $pos?->type ?? (
+            $code === '16' ? 'technicien' :
+            (in_array($code, ['17', '18']) ? 'commis' :
+            ($code === '19' ? 'chauffeur' :
+            (in_array($code, ['20', '21']) ? 'nettoyage' : 'cadre')))
+        );
 
         $rules = [
             'position' => 'required|string|exists:positions,code',
@@ -42,13 +49,13 @@ class ApplicationRequest extends FormRequest
             'agreement' => 'accepted',
         ];
 
-        if (in_array($code, ['17', '18'])) {
+        if ($type === 'commis') {
             // Commis
             $rules['school_level'] = 'required|string|max:255';
             $rules['end_school_year'] = 'nullable|integer|min:1950|max:2026';
             $rules['school_institution'] = 'nullable|string|max:255';
             $rules['grade_9_average'] = 'required|numeric|min:0|max:20';
-        } elseif ($code === '19') {
+        } elseif ($type === 'chauffeur') {
             // Chauffeur
             $rules['school_level'] = 'required|string|max:255';
             $rules['end_school_year'] = 'nullable|integer|min:1950|max:2026';
@@ -56,13 +63,13 @@ class ApplicationRequest extends FormRequest
             $rules['grade_9_average'] = 'required|numeric|min:0|max:20';
             $rules['driving_license_category'] = 'required|string|max:50';
             $rules['driving_license_date'] = 'required|date';
-        } elseif (in_array($code, ['20', '21'])) {
+        } elseif ($type === 'nettoyage') {
             // Nettoyage
             $rules['school_level'] = 'required|string|max:255';
             $rules['end_school_year'] = 'nullable|integer|min:1950|max:2026';
             $rules['school_institution'] = 'nullable|string|max:255';
             $rules['grade_6_average'] = 'required|numeric|min:0|max:20';
-        } elseif ($code === '16') {
+        } elseif ($type === 'technicien') {
             // Technicien Supérieur
             $rules['degree'] = 'nullable|string|max:255';
             $rules['specialty'] = 'required|string|max:255';

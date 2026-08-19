@@ -17,4 +17,16 @@ class Position extends Model
     {
         return $this->belongsToMany(Contest::class);
     }
+
+    protected static function booted(): void
+    {
+        static::saving(function (Position $pos) {
+            if ($pos->contest_type_id) {
+                $contestType = ContestType::find($pos->contest_type_id);
+                if ($contestType) {
+                    $pos->type = $contestType->code;
+                }
+            }
+        });
+    }
 }

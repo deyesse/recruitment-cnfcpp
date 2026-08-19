@@ -24,7 +24,7 @@ Route::get('/', function () {
             'id' => $pos->id,
             'code' => $pos->code,
             'name' => $pos->name,
-            'type' => $pos->type,
+            'type' => $pos->contestType?->code ?? $pos->type ?? 'cadre',
             'degree' => $pos->degree,
             'specialty' => $pos->specialty,
             'min_age' => $pos->contestType?->min_age,
@@ -32,6 +32,7 @@ Route::get('/', function () {
             'age_reference_date' => $pos->contestType?->age_reference_date?->format('Y-m-d'),
             'driving_license_min_years' => $pos->contestType?->driving_license_min_years ?? 2,
             'school_levels' => $pos->contestType?->school_levels ?? [],
+            'has_driving_license' => (bool) ($pos->contestType?->has_driving_license ?? (($pos->contestType?->code ?? $pos->type) === 'chauffeur')),
         ];
     })->toArray();
     $degrees = $contest->degrees ?? [];
@@ -104,7 +105,7 @@ Route::post('/apply', function (ApplicationRequest $request) {
     $validated['logo_url'] = $contest?->logo_path ? asset('storage/' . $contest->logo_path) : asset('cnfcpp.png');
     $positionModel = Position::where('code', $validated['position'])->with('contestType')->first();
     $validated['position_name'] = $positionModel?->name;
-    $validated['position_type'] = $positionModel?->type ?? ($positionModel?->contestType?->code ?? 'cadre');
+    $validated['position_type'] = $positionModel?->contestType?->code ?? $positionModel?->type ?? 'cadre';
     $validated['base_average_field'] = $positionModel?->contestType?->base_average_field ?? 'bac_average';
     $validated['min_score'] = $positionModel?->contestType?->min_score ?? 12.0;
 
@@ -182,7 +183,7 @@ Route::post('/reprint', function (\Illuminate\Http\Request $request) {
         'logo_url' => $contest?->logo_path ? asset('storage/' . $contest->logo_path) : asset('cnfcpp.png'),
         'position' => (string) $app->position,
         'position_name' => $posName,
-        'position_type' => $positionForReprint?->type ?? ($positionForReprint?->contestType?->code ?? 'cadre'),
+        'position_type' => $positionForReprint?->contestType?->code ?? $positionForReprint?->type ?? 'cadre',
         'base_average_field' => $positionForReprint?->contestType?->base_average_field ?? 'bac_average',
         'min_score' => $positionForReprint?->contestType?->min_score ?? 12.0,
         'name' => $app->name,
