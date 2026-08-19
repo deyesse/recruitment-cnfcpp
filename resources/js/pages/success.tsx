@@ -179,11 +179,11 @@ export default function Success({ data = {} }: SuccessProps) {
               </div>
 
               {/* Left: Logo (aligned to the far left) */}
-              <div className="logo-col flex items-center justify-end text-left min-w-[170px] shrink-0">
+              <div className="logo-col flex items-center justify-start text-left w-[170px] max-w-[170px] shrink-0">
                 <img
                   src={logoSrc}
                   alt="شعار المؤسسة"
-                  className="h-20 md:h-24 max-h-24 w-auto object-contain mr-auto ml-0"
+                  className="max-h-16 md:max-h-20 max-w-full w-auto h-auto object-contain mr-auto ml-0"
                   onError={(e) => {
                     const target = e.currentTarget as HTMLImageElement;
                     if (target.src !== window.location.origin + '/cnfcpp.png') {
@@ -820,14 +820,35 @@ export default function Success({ data = {} }: SuccessProps) {
             font-size: 12px !important;
           }
 
+          .ministry-col {
+            width: 210px !important;
+            max-width: 220px !important;
+            min-width: 190px !important;
+            flex-shrink: 0 !important;
+          }
+
+          .title-col {
+            flex: 1 1 auto !important;
+            padding: 0 12px !important;
+          }
+
           .logo-col {
-            justify-content: flex-end !important;
+            width: 160px !important;
+            max-width: 160px !important;
+            min-width: 130px !important;
+            flex-shrink: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
             text-align: left !important;
           }
 
           .logo-col img {
-            height: 90px !important;
-            max-height: 90px !important;
+            max-height: 52px !important;
+            max-width: 155px !important;
+            width: auto !important;
+            height: auto !important;
+            object-fit: contain !important;
             margin-right: auto !important;
             margin-left: 0 !important;
           }
