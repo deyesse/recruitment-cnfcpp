@@ -24,8 +24,10 @@ class SecurityHeaders
                "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " .
                "style-src 'self' 'unsafe-inline' https://fonts.bunny.net; " .
                "font-src 'self' https://fonts.bunny.net data:; " .
-               "img-src 'self' data: blob: https:; " .
+               "img-src 'self' data: blob:; " .
                "connect-src 'self' ws: wss:; " .
+               "form-action 'self'; " .
+               "base-uri 'self'; " .
                "frame-ancestors 'self';";
 
         $response->headers->set('Content-Security-Policy', $csp);
