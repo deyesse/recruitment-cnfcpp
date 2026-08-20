@@ -76,10 +76,21 @@ Route::post('/unlock-test-mode', function (\Illuminate\Http\Request $request) {
 
 Route::get('/success', function () {
     $data = session('data') ?? [];
+    $contest = \App\Models\Contest::query()->where('ends_at', '>', now())->first()
+        ?? (isset($data['contest_id']) ? \App\Models\Contest::find($data['contest_id']) : null)
+        ?? \App\Models\Contest::latest()->first();
+
     if (! isset($data['logo_url'])) {
-        $contest = \App\Models\Contest::query()->where('ends_at', '>', now())->first()
-            ?? (isset($data['contest_id']) ? \App\Models\Contest::find($data['contest_id']) : null);
         $data['logo_url'] = $contest?->logo_path ? asset('storage/' . $contest->logo_path) : asset('cnfcpp.png');
+    }
+    if (empty($data['contest_name']) && $contest) {
+        $data['contest_name'] = $contest->name;
+    }
+    if (empty($data['header_text']) && $contest) {
+        $data['header_text'] = $contest->header_text;
+    }
+    if (empty($data['footer_text'])) {
+        $data['footer_text'] = \App\Models\Setting::getFooterText($contest?->footer_text);
     }
     return Inertia::render('success', [
         'data' => $data,
@@ -102,6 +113,7 @@ Route::post('/apply', function (ApplicationRequest $request) {
     $validated['contest_name'] = $contest?->name;
     $validated['show_score'] = (bool) ($contest?->show_score ?? true);
     $validated['header_text'] = $contest?->header_text;
+    $validated['footer_text'] = \App\Models\Setting::getFooterText($contest?->footer_text);
     $validated['logo_url'] = $contest?->logo_path ? asset('storage/' . $contest->logo_path) : asset('cnfcpp.png');
     $positionModel = Position::where('code', $validated['position'])->with('contestType')->first();
     $validated['position_name'] = $positionModel?->name;
@@ -109,7 +121,7 @@ Route::post('/apply', function (ApplicationRequest $request) {
     $validated['base_average_field'] = $positionModel?->contestType?->base_average_field ?? 'bac_average';
     $validated['min_score'] = $positionModel?->contestType?->min_score ?? 12.0;
 
-    $app = \App\Models\Application::create(Arr::except($validated, ['agreement', 'contest_name', 'show_score', 'header_text', 'logo_url']));
+    $app = \App\Models\Application::create(Arr::except($validated, ['agreement', 'contest_name', 'show_score', 'header_text', 'footer_text', 'logo_url']));
     $validated['id'] = $app->id;
     $validated['score'] = $app->score;
     $validated['created_at'] = $app->created_at?->format('d/m/Y H:i') ?? now()->format('d/m/Y H:i');
@@ -169,7 +181,7 @@ Route::post('/reprint', function (\Illuminate\Http\Request $request) {
         ?? Position::where('code', (string) $app->position)->first()?->name
         ?? '';
 
-    $contest = $app->contest ?? \App\Models\Contest::find($app->contest_id);
+    $contest = $app->contest ?? \App\Models\Contest::find($app->contest_id) ?? \App\Models\Contest::latest()->first();
     $contestName = $contest?->name ?? '';
     $showScore = (bool) ($contest?->show_score ?? true);
 
@@ -180,6 +192,7 @@ Route::post('/reprint', function (\Illuminate\Http\Request $request) {
         'contest_name' => $contestName,
         'show_score' => $showScore,
         'header_text' => $contest?->header_text,
+        'footer_text' => \App\Models\Setting::getFooterText($contest?->footer_text),
         'logo_url' => $contest?->logo_path ? asset('storage/' . $contest->logo_path) : asset('cnfcpp.png'),
         'position' => (string) $app->position,
         'position_name' => $posName,

@@ -38,6 +38,9 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
+        $activeContest = \App\Models\Contest::query()->where('ends_at', '>', now())->first();
+        $footerText = \App\Models\Setting::getFooterText($activeContest?->footer_text);
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -46,6 +49,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'footerText' => $footerText,
         ];
     }
 }

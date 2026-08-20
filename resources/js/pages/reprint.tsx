@@ -3,7 +3,7 @@ import { Head, Form, usePage } from '@inertiajs/react';
 import { Printer, ArrowRight, AlertCircle, Calendar, Phone, CreditCard } from 'lucide-react';
 
 export default function Reprint() {
-    const { errors } = usePage().props as any;
+    const { errors, footerText } = usePage().props as any;
 
     const [data, setData] = useState({
         cin: '',
@@ -185,9 +185,13 @@ export default function Reprint() {
                 </div>
             </div>
 
-            <footer className="mt-8 text-center text-xs text-sky-600 font-medium py-4 border-t border-slate-200/60 sm:mx-auto sm:w-full sm:max-w-xl" dir="ltr">
-                © Powered by <span className="font-semibold text-sky-700">E..E.E. Bouzekri</span> - <span className="font-semibold text-sky-700">DSI-CNFCPP</span> August 2026
-            </footer>
+            <footer
+                className="mt-8 text-center text-xs text-sky-600 font-medium py-4 border-t border-slate-200/60 sm:mx-auto sm:w-full sm:max-w-xl"
+                dir="ltr"
+                dangerouslySetInnerHTML={{
+                    __html: footerText || '© Powered by <span class="font-semibold text-sky-700">E..E.E. Bouzekri</span> - <span class="font-semibold text-sky-700">DSI-CNFCPP</span> August 2026'
+                }}
+            />
         </div>
     );
 }

@@ -101,9 +101,24 @@
                     </div>
 
                     <div class="flex-1 text-center flex flex-col justify-center px-2">
-                        <h1 class="text-lg md:text-xl font-black text-slate-950 leading-snug">
-                            {{ $data['contest_name'] ?? 'استمارة ترشح للمشاركة في المناظرة الخارجية لانتداب إطارات وأعوان بعنوان سنتي 2025 و2026' }}
-                        </h1>
+                        @if(!empty($data['contest_name']))
+                            @if(str_starts_with($data['contest_name'], 'استمارة'))
+                                <h1 class="text-lg md:text-xl font-black text-slate-950 leading-snug">
+                                    {{ $data['contest_name'] }}
+                                </h1>
+                            @else
+                                <h1 class="text-base md:text-lg font-extrabold text-slate-950 leading-snug">
+                                    استمارة ترشح
+                                </h1>
+                                <div class="text-xs md:text-sm font-bold text-slate-800 mt-0.5">
+                                    {{ $data['contest_name'] }}
+                                </div>
+                            @endif
+                        @else
+                            <h1 class="text-lg md:text-xl font-black text-slate-950 leading-snug">
+                                استمارة ترشح للمشاركة في المناظرة الخارجية لانتداب إطارات وأعوان بعنوان سنتي 2025 و2026
+                            </h1>
+                        @endif
                     </div>
 
                     <div class="flex items-center justify-end min-w-[130px]">
@@ -391,7 +406,7 @@
     </div>
 
     <footer class="no-print max-w-4xl mx-auto text-center text-xs text-sky-600 font-medium py-4 pb-8" dir="ltr">
-        © Powered by <span class="font-semibold text-sky-700">E..E.E. Bouzekri</span> - <span class="font-semibold text-sky-700">DSI-CNFCPP</span> August 2026
+        {!! $data['footer_text'] ?? \App\Models\Setting::getFooterText() !!}
     </footer>
 
 </body>

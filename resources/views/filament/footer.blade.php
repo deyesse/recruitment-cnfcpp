@@ -1,3 +1,6 @@
-<footer style="margin-top: 2rem; margin-bottom: 1.5rem; text-align: center !important; font-size: 0.75rem; line-height: 1rem; color: #0284c7 !important; font-weight: 500; border-t: 1px solid #e2e8f0; border-top-width: 1px; border-top-style: solid; border-top-color: rgba(226, 232, 240, 0.8); padding-top: 1rem; width: 100%; font-family: inherit;" dir="ltr">
-    © Powered by <span style="font-weight: 600; color: #0369a1 !important;">E..E.E. Bouzekri</span> - <span style="font-weight: 600; color: #0369a1 !important;">DSI-CNFCPP</span> <span style="color: #0284c7 !important;">August 2026</span>
+@php
+    $footerText = \App\Models\Setting::getFooterText();
+@endphp
+<footer style="margin-top: 2rem; margin-bottom: 1.5rem; text-align: center !important; font-size: 0.75rem; line-height: 1rem; color: #0284c7 !important; font-weight: 500; border-top: 1px solid rgba(226, 232, 240, 0.8); padding-top: 1rem; width: 100%; font-family: inherit;" dir="ltr">
+    {!! $footerText !!}
 </footer>

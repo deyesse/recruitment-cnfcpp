@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { RecruitmentForm } from '@/components/recruitment-form';
 
 export default function Welcome({
@@ -20,6 +20,7 @@ export default function Welcome({
     isTestMode?: boolean;
     isTestUnlocked?: boolean;
 }) {
+    const { footerText } = usePage().props as { footerText?: string };
     const { data, setData, post, processing, errors } = useForm({
         test_code: '',
     });
@@ -110,9 +111,13 @@ export default function Welcome({
                     <div className={"font-mono text-lg"}>لا توجد اي مناظرة عمل في الوقت الحالي</div>
                 )}
 
-                <footer className="mt-8 text-center text-xs text-sky-600 font-medium py-4 border-t border-slate-200/60 w-full max-w-5xl" dir="ltr">
-                    © Powered by <span className="font-semibold text-sky-700">E..E.E. Bouzekri</span> - <span className="font-semibold text-sky-700">DSI-CNFCPP</span> August 2026
-                </footer>
+                <footer
+                    className="mt-8 text-center text-xs text-sky-600 font-medium py-4 border-t border-slate-200/60 w-full max-w-5xl"
+                    dir="ltr"
+                    dangerouslySetInnerHTML={{
+                        __html: footerText || '© Powered by <span class="font-semibold text-sky-700">E..E.E. Bouzekri</span> - <span class="font-semibold text-sky-700">DSI-CNFCPP</span> August 2026'
+                    }}
+                />
             </div>
         </>
     );

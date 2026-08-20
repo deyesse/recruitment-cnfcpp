@@ -46,6 +46,14 @@ class ContestForm
                             ->hidden(fn () => ! auth()->user()?->isSuperAdmin())
                             ->columnSpan(1),
 
+                        Textarea::make('footer_text')
+                            ->label('نص حقوق التطوير والتذييل المخصص لهذه المناظرة (Powered by)')
+                            ->rows(2)
+                            ->placeholder('© Powered by E..E.E. Bouzekri - DSI-CNFCPP August 2026')
+                            ->helperText('اتركه فارغاً لاستخدام النص الافتراضي العام للمنظومة (متاح فقط للـ Super Admin)')
+                            ->hidden(fn () => ! auth()->user()?->isSuperAdmin())
+                            ->columnSpanFull(),
+
                         DateTimePicker::make('starts_at')
                             ->format('Y-m-d H:i')
                             ->label('تاريخ ووقت فتح المناظرة')

@@ -9,6 +9,7 @@ interface SuccessProps {
     position_type?: string
     contest_name?: string
     header_text?: string
+    footer_text?: string
     logo_url?: string
     show_score?: boolean
     min_score?: number
@@ -170,12 +171,31 @@ export default function Success({ data = {} }: SuccessProps) {
 
               {/* Center: Contest Title */}
               <div className="title-col flex-1 text-center px-2">
-                <h1 className="text-base md:text-lg font-extrabold text-teal-800 leading-snug">
-                  استمارة ترشح للمناظرة الخارجية لانتداب إطارات وأعوان
-                </h1>
-                <div className="text-xs md:text-sm font-bold text-slate-800 mt-0.5">
-                  بعنوان سنتي 2025 و 2026
-                </div>
+                {data.contest_name ? (
+                  data.contest_name.startsWith('استمارة') ? (
+                    <h1 className="text-base md:text-lg font-extrabold text-teal-800 leading-snug">
+                      {data.contest_name}
+                    </h1>
+                  ) : (
+                    <>
+                      <h1 className="text-base md:text-lg font-extrabold text-teal-800 leading-snug">
+                        استمارة ترشح
+                      </h1>
+                      <div className="text-xs md:text-sm font-bold text-slate-800 mt-0.5">
+                        {data.contest_name}
+                      </div>
+                    </>
+                  )
+                ) : (
+                  <>
+                    <h1 className="text-base md:text-lg font-extrabold text-teal-800 leading-snug">
+                      استمارة ترشح للمناظرة الخارجية لانتداب إطارات وأعوان
+                    </h1>
+                    <div className="text-xs md:text-sm font-bold text-slate-800 mt-0.5">
+                      بعنوان سنتي 2025 و 2026
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Left: Logo (aligned to the far left) */}
@@ -762,9 +782,13 @@ export default function Success({ data = {} }: SuccessProps) {
       </div>
 
       {/* ── Screen Footer Signature ── */}
-      <footer className="no-print max-w-4xl mx-auto text-center text-xs text-sky-600 font-medium py-4 pb-8" dir="ltr">
-        © Powered by <span className="font-semibold text-sky-700">E..E.E. Bouzekri</span> - <span className="font-semibold text-sky-700">DSI-CNFCPP</span> August 2026
-      </footer>
+      <footer
+        className="no-print max-w-4xl mx-auto text-center text-xs text-sky-600 font-medium py-4 pb-8"
+        dir="ltr"
+        dangerouslySetInnerHTML={{
+          __html: data.footer_text || '© Powered by <span class="font-semibold text-sky-700">E..E.E. Bouzekri</span> - <span class="font-semibold text-sky-700">DSI-CNFCPP</span> August 2026'
+        }}
+      />
 
       {/* ══════════════════════════════════════════════════════════════
           PRINT & DISPLAY STYLES
