@@ -48,18 +48,16 @@
             gap: 20px;
         }
         .candidate-avatar {
-            width: 60px;
-            height: 60px;
+            width: 56px;
+            height: 56px;
             border-radius: 16px;
-            background: #008080;
+            background: linear-gradient(135deg, #0d9488 0%, #047857 100%);
             color: #ffffff;
-            font-size: 22px;
-            font-weight: 900;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            letter-spacing: 1px;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
         }
         .candidate-name-row {
             display: flex;
@@ -260,7 +258,10 @@
         <div class="candidate-header-card">
             <div class="candidate-header-right">
                 <div class="candidate-avatar">
-                    {{ $initials ?: 'JH' }}
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
                 </div>
                 <div>
                     <div class="candidate-name-row">
