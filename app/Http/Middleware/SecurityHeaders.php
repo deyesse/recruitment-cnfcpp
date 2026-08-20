@@ -25,7 +25,7 @@ class SecurityHeaders
                "style-src 'self' 'unsafe-inline' https://fonts.bunny.net; " .
                "font-src 'self' https://fonts.bunny.net data:; " .
                "img-src 'self' data: blob:; " .
-               "connect-src 'self' ws: wss:; " .
+               "connect-src 'self'; " .
                "form-action 'self'; " .
                "base-uri 'self'; " .
                "frame-ancestors 'self';";
