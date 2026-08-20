@@ -39,7 +39,7 @@ class ManageSettings extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'footer_text' => Setting::get('footer_text', '© Powered by <span class="font-semibold text-sky-700">E..E.E. Bouzekri</span> - <span class="font-semibold text-sky-700">DSI-CNFCPP</span> August 2026'),
+            'footer_text' => Setting::getFooterText(),
         ]);
     }
 

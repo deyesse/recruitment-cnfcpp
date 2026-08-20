@@ -434,7 +434,7 @@
                             </div>
                         </div>
                         <div class="divider-line"></div>
-                        <div class="data-row-2col" style="margin-bottom: 0;">
+                        <div class="data-row" style="margin-bottom: 0;">
                             <div class="data-item">
                                 <span class="data-label">مركز التكوين المهني</span>
                                 <span class="data-val">{{ $app->institution ?: 'مركز تكوين مهني عمومي' }}</span>
@@ -442,6 +442,10 @@
                             <div class="data-item">
                                 <span class="data-label">سنة التخرج</span>
                                 <span class="data-val data-val-mono">{{ $app->graduation_year ?: '-' }}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">معدل سنة التخرج</span>
+                                <span class="data-val data-val-mono" style="color: #0d9488;">{{ $app->grad_average ? number_format($app->grad_average, 2) : '-' }}</span>
                             </div>
                         </div>
 
@@ -458,7 +462,7 @@
                             </div>
                         </div>
                         <div class="divider-line"></div>
-                        <div class="data-row-2col" style="margin-bottom: 0;">
+                        <div class="data-row" style="margin-bottom: 0;">
                             <div class="data-item">
                                 <span class="data-label">المؤسسة الجامعية</span>
                                 <span class="data-val">{{ $app->institution ?: 'مؤسسة تعليم عال عمومية' }}</span>
@@ -466,6 +470,10 @@
                             <div class="data-item">
                                 <span class="data-label">سنة التخرج</span>
                                 <span class="data-val data-val-mono">{{ $app->graduation_year ?: '-' }}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">معدل سنة التخرج</span>
+                                <span class="data-val data-val-mono" style="color: #0d9488;">{{ $app->grad_average ? number_format($app->grad_average, 2) : '-' }}</span>
                             </div>
                         </div>
                     @endif
@@ -514,39 +522,77 @@
                         <span>النتائج وصيغة الفرز الأولي</span>
                     </div>
 
-                    <div class="score-cards-row">
-                        {{-- Base Average --}}
-                        <div class="score-card-gray">
-                            <div class="score-card-label">
-                                @if($isNettoyage)
-                                    معدل السنة السادسة
-                                @elseif($isCommis || $isChauffeur)
-                                    معدل السنة التاسعة
-                                @elseif($isTechnicien)
-                                    معدل BTP / البكالوريا
-                                @else
-                                    معدل البكالوريا (60%)
-                                @endif
+                    @if($isCadre || $isTechnicien)
+                        <div class="score-cards-row" style="grid-template-columns: repeat(3, 1fr);">
+                            {{-- Base Average --}}
+                            <div class="score-card-gray">
+                                <div class="score-card-label">
+                                    @if($isTechnicien)
+                                        معدل BTP / البكالوريا (40%)
+                                    @else
+                                        معدل البكالوريا (60%)
+                                    @endif
+                                </div>
+                                <div class="score-card-value">
+                                    @if($isTechnicien)
+                                        {{ $app->btp_average ? number_format($app->btp_average, 2) : ($app->bac_average ? number_format($app->bac_average, 2) : '-') }}
+                                    @else
+                                        {{ $app->bac_average ? number_format($app->bac_average, 2) : '-' }}
+                                    @endif
+                                </div>
                             </div>
-                            <div class="score-card-value">
-                                @if($isNettoyage)
-                                    {{ $app->grade_6_average ? number_format($app->grade_6_average, 2) . ' / 20' : '10.00 / 20' }}
-                                @elseif($isCommis || $isChauffeur)
-                                    {{ $app->grade_9_average ? number_format($app->grade_9_average, 2) . ' / 20' : '-' }}
-                                @elseif($isTechnicien)
-                                    {{ $app->btp_average ?: ($app->bac_average ?: '-') }}
-                                @else
-                                    {{ $app->bac_average ?: '-' }}
-                                @endif
-                            </div>
-                        </div>
 
-                        {{-- Total Score --}}
-                        <div class="score-card-teal">
-                            <div class="score-card-label">مجموع نقاط الفرز الأولي</div>
-                            <div class="score-card-value">{{ $scoreFormatted }}</div>
+                            {{-- Graduation Average --}}
+                            <div class="score-card-gray">
+                                <div class="score-card-label">
+                                    @if($isTechnicien)
+                                        معدل سنة التخرج (60%)
+                                    @else
+                                        معدل سنة التخرج (40%)
+                                    @endif
+                                </div>
+                                <div class="score-card-value">
+                                    {{ $app->grad_average ? number_format($app->grad_average, 2) : '-' }}
+                                </div>
+                            </div>
+
+                            {{-- Total Score --}}
+                            <div class="score-card-teal">
+                                <div class="score-card-label">مجموع نقاط الفرز الأولي</div>
+                                <div class="score-card-value">{{ $scoreFormatted }}</div>
+                            </div>
                         </div>
-                    </div>
+                    @else
+                        <div class="score-cards-row">
+                            {{-- Base Average --}}
+                            <div class="score-card-gray">
+                                <div class="score-card-label">
+                                    @if($isNettoyage)
+                                        معدل السنة السادسة
+                                    @elseif($isCommis || $isChauffeur)
+                                        معدل السنة التاسعة
+                                    @else
+                                        معدل السنة التاسعة
+                                    @endif
+                                </div>
+                                <div class="score-card-value">
+                                    @if($isNettoyage)
+                                        {{ $app->grade_6_average ? number_format($app->grade_6_average, 2) . ' / 20' : '10.00 / 20' }}
+                                    @elseif($isCommis || $isChauffeur)
+                                        {{ $app->grade_9_average ? number_format($app->grade_9_average, 2) . ' / 20' : '-' }}
+                                    @else
+                                        -
+                                    @endif
+                                </div>
+                            </div>
+
+                            {{-- Total Score --}}
+                            <div class="score-card-teal">
+                                <div class="score-card-label">مجموع نقاط الفرز الأولي</div>
+                                <div class="score-card-value">{{ $scoreFormatted }}</div>
+                            </div>
+                        </div>
+                    @endif
 
                     <div class="formula-callout">
                         <strong>صيغة الفرز الأولي: </strong>
