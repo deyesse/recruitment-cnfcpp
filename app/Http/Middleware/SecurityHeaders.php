@@ -32,11 +32,6 @@ class SecurityHeaders
 
         $response->headers->set('Content-Security-Policy', $csp);
 
-        // HTTP Strict Transport Security (HSTS)
-        if ($request->isSecure() || config('app.env') === 'production') {
-            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-        }
-
         // Prevent MIME type sniffing
         $response->headers->set('X-Content-Type-Options', 'nosniff');
 
