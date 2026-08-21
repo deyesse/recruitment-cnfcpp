@@ -12,8 +12,12 @@
                 </div>
 
                 <div class="flex flex-col md:flex-row items-center gap-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-800">
-                    <div class="p-2 bg-white rounded-lg shadow-sm">
-                        {!! $qrCodeSvg !!}
+                    <div class="p-2 bg-white rounded-lg shadow-sm flex items-center justify-center">
+                        @if($qrCodeSvg)
+                            {!! $qrCodeSvg !!}
+                        @elseif($qrCodeImgUrl)
+                            <img src="{{ $qrCodeImgUrl }}" alt="QR Code 2FA" class="w-48 h-48" />
+                        @endif
                     </div>
                     <div class="space-y-3">
                         <h3 class="font-semibold text-gray-800 dark:text-gray-200">

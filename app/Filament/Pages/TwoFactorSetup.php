@@ -2,10 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use BaconQrCode\Renderer\Image\SvgImageBackEnd;
-use BaconQrCode\Renderer\ImageRenderer;
-use BaconQrCode\Renderer\RendererStyle\RendererStyle;
-use BaconQrCode\Writer;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -20,6 +16,7 @@ class TwoFactorSetup extends Page
     public ?string $code = '';
     public ?string $secret = null;
     public ?string $qrCodeSvg = null;
+    public ?string $qrCodeImgUrl = null;
     public array $recoveryCodes = [];
     public bool $isConfirmed = false;
 
@@ -57,18 +54,28 @@ class TwoFactorSetup extends Page
             $this->secret = $user->two_factor_secret;
         }
 
-        $qrCodeUrl = $google2fa->getQRCodeUrl(
+        $otpauthUrl = $google2fa->getQRCodeUrl(
             config('app.name', 'CNFCPP Admin'),
             $user->email,
             $this->secret
         );
 
-        $renderer = new ImageRenderer(
-            new RendererStyle(200),
-            new SvgImageBackEnd()
-        );
-        $writer = new Writer($renderer);
-        $this->qrCodeSvg = $writer->writeString($qrCodeUrl);
+        if (class_exists(\BaconQrCode\Renderer\ImageRenderer::class)) {
+            try {
+                $renderer = new \BaconQrCode\Renderer\ImageRenderer(
+                    new \BaconQrCode\Renderer\RendererStyle\RendererStyle(200),
+                    new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+                );
+                $writer = new \BaconQrCode\Writer($renderer);
+                $this->qrCodeSvg = $writer->writeString($otpauthUrl);
+            } catch (\Throwable $e) {
+                $this->qrCodeSvg = null;
+            }
+        }
+
+        if (empty($this->qrCodeSvg)) {
+            $this->qrCodeImgUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' . urlencode($otpauthUrl);
+        }
     }
 
     public function confirm(): void
