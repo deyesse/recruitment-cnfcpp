@@ -55,7 +55,7 @@ class TwoFactorSetup extends Page
         }
 
         $otpauthUrl = $google2fa->getQRCodeUrl(
-            config('app.name', 'CNFCPP Admin'),
+            'Concours',
             $user->email,
             $this->secret
         );
