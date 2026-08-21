@@ -23,6 +23,9 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'is_admin',
         'role',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'two_factor_confirmed_at',
     ];
 
     /**
@@ -61,6 +64,41 @@ class User extends Authenticatable implements FilamentUser
         return false;
     }
 
+    public function hasTwoFactorEnabled(): bool
+    {
+        return !empty($this->two_factor_secret) && !is_null($this->two_factor_confirmed_at);
+    }
+
+    public function generateTwoFactorRecoveryCodes(): array
+    {
+        $codes = [];
+        for ($i = 0; $i < 8; $i++) {
+            $codes[] = \Illuminate\Support\Str::random(10) . '-' . \Illuminate\Support\Str::random(10);
+        }
+
+        $this->forceFill([
+            'two_factor_recovery_codes' => $codes,
+        ])->save();
+
+        return $codes;
+    }
+
+    public function useRecoveryCode(string $code): bool
+    {
+        $codes = $this->two_factor_recovery_codes ?? [];
+
+        if (($key = array_search($code, $codes)) !== false) {
+            unset($codes[$key]);
+            $this->forceFill([
+                'two_factor_recovery_codes' => array_values($codes),
+            ])->save();
+
+            return true;
+        }
+
+        return false;
+    }
+
     protected static function booted(): void
     {
         static::saving(function (User $user) {
@@ -82,6 +120,8 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted:array',
             'two_factor_confirmed_at' => 'datetime',
             'is_admin' => 'boolean',
         ];
