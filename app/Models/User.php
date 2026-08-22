@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;
+use Filament\Auth\MultiFactor\Email\Contracts\HasEmailAuthentication;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, HasEmailAuthentication
 {
     use HasFactory, Notifiable;
 
@@ -23,9 +26,9 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'is_admin',
         'role',
-        'two_factor_secret',
-        'two_factor_recovery_codes',
-        'two_factor_confirmed_at',
+        'app_authentication_secret',
+        'app_authentication_recovery_codes',
+        'has_email_authentication',
     ];
 
     /**
@@ -35,8 +38,8 @@ class User extends Authenticatable implements FilamentUser
      */
     protected $hidden = [
         'password',
-        'two_factor_secret',
-        'two_factor_recovery_codes',
+        'app_authentication_secret',
+        'app_authentication_recovery_codes',
         'remember_token',
     ];
 
@@ -64,39 +67,59 @@ class User extends Authenticatable implements FilamentUser
         return false;
     }
 
+    /**
+     * App Authentication (TOTP) implementations
+     */
+    public function getAppAuthenticationSecret(): ?string
+    {
+        return $this->app_authentication_secret;
+    }
+
+    public function saveAppAuthenticationSecret(?string $secret): void
+    {
+        $this->forceFill([
+            'app_authentication_secret' => $secret,
+        ])->save();
+    }
+
+    public function getAppAuthenticationHolderName(): string
+    {
+        return $this->email;
+    }
+
+    /**
+     * App Authentication Recovery Codes implementations
+     */
+    public function getAppAuthenticationRecoveryCodes(): ?array
+    {
+        return $this->app_authentication_recovery_codes;
+    }
+
+    public function saveAppAuthenticationRecoveryCodes(?array $codes): void
+    {
+        $this->forceFill([
+            'app_authentication_recovery_codes' => $codes,
+        ])->save();
+    }
+
+    /**
+     * Email Authentication implementations
+     */
+    public function hasEmailAuthentication(): bool
+    {
+        return (bool) $this->has_email_authentication;
+    }
+
+    public function toggleEmailAuthentication(bool $condition): void
+    {
+        $this->forceFill([
+            'has_email_authentication' => $condition,
+        ])->save();
+    }
+
     public function hasTwoFactorEnabled(): bool
     {
-        return !empty($this->two_factor_secret) && !is_null($this->two_factor_confirmed_at);
-    }
-
-    public function generateTwoFactorRecoveryCodes(): array
-    {
-        $codes = [];
-        for ($i = 0; $i < 8; $i++) {
-            $codes[] = \Illuminate\Support\Str::random(10) . '-' . \Illuminate\Support\Str::random(10);
-        }
-
-        $this->forceFill([
-            'two_factor_recovery_codes' => $codes,
-        ])->save();
-
-        return $codes;
-    }
-
-    public function useRecoveryCode(string $code): bool
-    {
-        $codes = $this->two_factor_recovery_codes ?? [];
-
-        if (($key = array_search($code, $codes)) !== false) {
-            unset($codes[$key]);
-            $this->forceFill([
-                'two_factor_recovery_codes' => array_values($codes),
-            ])->save();
-
-            return true;
-        }
-
-        return false;
+        return filled($this->app_authentication_secret) || $this->has_email_authentication;
     }
 
     protected static function booted(): void
@@ -120,10 +143,11 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'two_factor_secret' => 'encrypted',
-            'two_factor_recovery_codes' => 'encrypted:array',
-            'two_factor_confirmed_at' => 'datetime',
+            'app_authentication_secret' => 'encrypted',
+            'app_authentication_recovery_codes' => 'encrypted:array',
+            'has_email_authentication' => 'boolean',
             'is_admin' => 'boolean',
         ];
     }
 }
+

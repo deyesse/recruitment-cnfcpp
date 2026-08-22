@@ -29,9 +29,9 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            'two_factor_secret' => Str::random(10),
-            'two_factor_recovery_codes' => Str::random(10),
-            'two_factor_confirmed_at' => now(),
+            'app_authentication_secret' => null,
+            'app_authentication_recovery_codes' => null,
+            'has_email_authentication' => false,
         ];
     }
 
@@ -46,14 +46,27 @@ class UserFactory extends Factory
     }
 
     /**
-     * Indicate that the model does not have two-factor authentication configured.
+     * Indicate that the model has app authentication configured.
      */
-    public function withoutTwoFactor(): static
+    public function withAppAuthentication(): static
     {
         return $this->state(fn (array $attributes) => [
-            'two_factor_secret' => null,
-            'two_factor_recovery_codes' => null,
-            'two_factor_confirmed_at' => null,
+            'app_authentication_secret' => Str::random(32),
+            'app_authentication_recovery_codes' => [
+                Str::random(10) . '-' . Str::random(10),
+                Str::random(10) . '-' . Str::random(10),
+            ],
+        ]);
+    }
+
+    /**
+     * Indicate that the model has email authentication configured.
+     */
+    public function withEmailAuthentication(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'has_email_authentication' => true,
         ]);
     }
 }
+
