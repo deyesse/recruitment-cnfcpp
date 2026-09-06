@@ -42,7 +42,7 @@
                 @if(isset($lastContest) && $lastContest)
                     <p class="deadline-label ">انتهت فترة التسجيل</p>
                     <p class="deadline-date">
-                        {{ \Illuminate\Support\Carbon::parse($lastContest->ends_at)->locale('ar')->translatedFormat('l d F Y على الساعة H:i') }}
+                        {{ \App\Helpers\TunisianDate::format($lastContest->ends_at) }}
                     </p>
                 @else
                     <p class="deadline-label ">لا توجد مناظرة مفتوحة حالياً</p>

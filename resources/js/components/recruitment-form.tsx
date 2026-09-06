@@ -4,6 +4,7 @@ import { InputGroup, SelectGroup } from './InputGroup';
 import { SectionHeader } from './SectionHeader';
 import { Send, Clock, AlertTriangle } from 'lucide-react';
 import { Form, usePage } from '@inertiajs/react';
+import { formatTunisianDate } from '../utils/tunisianDate';
 
 export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
     const [data, setData] = useState<CandidateData>(INITIAL_DATA);
@@ -188,7 +189,7 @@ export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
                             {timeLeft.isExpired ? 'انتهت فترة التسجيل' : 'تاريخ غلق باب الترشحات'}
                         </p>
                         <p className={`text-lg font-bold ${timeLeft.isExpired ? 'text-red-900' : 'text-orange-900'}`}>
-                            {deadline.toLocaleDateString('ar-TN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).replace(/\s*في\s*/, ' - ')}
+                            {formatTunisianDate(deadline)}
                         </p>
                     </div>
                 </div>
