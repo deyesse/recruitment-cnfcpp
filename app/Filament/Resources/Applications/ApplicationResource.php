@@ -65,11 +65,7 @@ class ApplicationResource extends Resource
                     ->multiple()
                     ->searchable()
                     ->placeholder('الكل'),
-            ])
-            ->modifyQueryUsing(function ($query) {
-                return $query->join('contests', 'contests.id', '=', 'applications.contest_id')
-                    ->select('applications.*');
-            });
+            ]);
     }
 
     protected static function getProfileType(?Application $record): string
