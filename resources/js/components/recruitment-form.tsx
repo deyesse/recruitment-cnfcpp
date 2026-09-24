@@ -579,7 +579,7 @@ export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
                                 <>
                                     <div className="md:col-span-12">
                                         <InputGroup
-                                            label="معدل مؤهل التقني المهني أو البكالوريا"
+                                            label="معدل الباكالوريا أو معدل سنة ختم التكوين بمؤهل التقني المهني"
                                             name="bac_average"
                                             type="number"
                                             step="0.01"
