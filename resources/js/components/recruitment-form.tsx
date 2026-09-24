@@ -773,32 +773,6 @@ export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
                                             disabled={timeLeft.isExpired}
                                         />
                                     </div>
-                                    <div className="md:col-span-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
-                                        <InputGroup
-                                            label="رخصة السياقة"
-                                            name="driving_license_category"
-                                            value={data.driving_license_category || 'صنف ب (B)'}
-                                            onChange={handleChange}
-                                            required
-                                            disabled={timeLeft.isExpired}
-                                        />
-                                    </div>
-                                    <div className="md:col-span-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
-                                        <InputGroup
-                                            label="تاريخ الإصدار / الحصول على الرخصة"
-                                            name="driving_license_date"
-                                            type="date"
-                                            value={data.driving_license_date}
-                                            onChange={handleChange}
-                                            required
-                                            disabled={timeLeft.isExpired}
-                                        />
-                                        {licenseError && (
-                                            <p className="text-red-600 text-xs font-bold mt-2">
-                                                {licenseError}
-                                            </p>
-                                        )}
-                                    </div>
                                 </>
                             )}
 
@@ -851,6 +825,38 @@ export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
                                             placeholder="--.--"
                                             disabled={timeLeft.isExpired}
                                         />
+                                    </div>
+                                </>
+                            )}
+
+                            {/* DRIVING LICENSE - shown for any profile type when has_driving_license is enabled */}
+                            {selectedPos?.has_driving_license && (
+                                <>
+                                    <div className="md:col-span-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                        <InputGroup
+                                            label="رخصة السياقة"
+                                            name="driving_license_category"
+                                            value={data.driving_license_category || 'صنف ب (B)'}
+                                            onChange={handleChange}
+                                            required
+                                            disabled={timeLeft.isExpired}
+                                        />
+                                    </div>
+                                    <div className="md:col-span-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                        <InputGroup
+                                            label="تاريخ الإصدار / الحصول على الرخصة"
+                                            name="driving_license_date"
+                                            type="date"
+                                            value={data.driving_license_date}
+                                            onChange={handleChange}
+                                            required
+                                            disabled={timeLeft.isExpired}
+                                        />
+                                        {licenseError && (
+                                            <p className="text-red-600 text-xs font-bold mt-2">
+                                                {licenseError}
+                                            </p>
+                                        )}
                                     </div>
                                 </>
                             )}
