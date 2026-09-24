@@ -195,8 +195,8 @@ class ApplicationRequest extends FormRequest
                 // 3. Check Driving License Seniority (Configurable, default 2 years before reference date)
                 if ($code === '19' || ($pos && $pos->type === 'chauffeur') || ($contestType && $contestType->has_driving_license)) {
                     $licenseDateInput = $this->input('driving_license_date');
-                    if ($licenseDateInput) {
-                        $minYears = $contestType?->driving_license_min_years ?? 2;
+                    $minYears = $contestType?->driving_license_min_years ?? 0;
+                    if ($licenseDateInput && $minYears > 0) {
                         $refCarbon = $contestType?->age_reference_date ?? ($contest?->ends_at ?? now());
                         $licenseCarbon = \Carbon\Carbon::parse($licenseDateInput);
 
