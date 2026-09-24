@@ -117,22 +117,24 @@ export const RecruitmentForm: React.FC = (deadlineDate, positions) => {
 
     let licenseError: string | null = null;
     if (selectedPos && (profileType === 'chauffeur' || selectedPos.has_driving_license) && data.driving_license_date) {
-        const parts = data.driving_license_date.split('-');
-        if (parts.length === 3 && parts[0].length === 4) {
-            const minYears = selectedPos.driving_license_min_years !== undefined ? Number(selectedPos.driving_license_min_years) : 2;
-            const licenseDate = new Date(data.driving_license_date);
-            const refDate = selectedPos.age_reference_date
-                ? new Date(selectedPos.age_reference_date)
-                : new Date('2026-01-01');
+        const minYears = selectedPos.driving_license_min_years != null ? Number(selectedPos.driving_license_min_years) : 0;
+        if (minYears > 0) {
+            const parts = data.driving_license_date.split('-');
+            if (parts.length === 3 && parts[0].length === 4) {
+                const licenseDate = new Date(data.driving_license_date);
+                const refDate = selectedPos.age_reference_date
+                    ? new Date(selectedPos.age_reference_date)
+                    : new Date('2026-01-01');
 
-            const yearsAfter = new Date(licenseDate);
-            yearsAfter.setFullYear(yearsAfter.getFullYear() + minYears);
+                const yearsAfter = new Date(licenseDate);
+                yearsAfter.setFullYear(yearsAfter.getFullYear() + minYears);
 
-            if (yearsAfter > refDate) {
-                const refFormatted = selectedPos.age_reference_date
-                    ? new Date(selectedPos.age_reference_date).toLocaleDateString('fr-FR')
-                    : '01/01/2026';
-                licenseError = `تنبيه هام: يجب أن يكون المترشح متحصل على رخصة السياقة منذ ${minYears} سنوات على الأقل بتاريخ المرجع (${refFormatted}). يُرفض الملف تلقائياً.`;
+                if (yearsAfter > refDate) {
+                    const refFormatted = selectedPos.age_reference_date
+                        ? new Date(selectedPos.age_reference_date).toLocaleDateString('fr-FR')
+                        : '01/01/2026';
+                    licenseError = `تنبيه هام: يجب أن يكون المترشح متحصل على رخصة السياقة منذ ${minYears} سنوات على الأقل بتاريخ المرجع (${refFormatted}). يُرفض الملف تلقائياً.`;
+                }
             }
         }
     }

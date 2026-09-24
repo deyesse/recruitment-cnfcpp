@@ -30,7 +30,7 @@ Route::get('/', function () {
             'min_age' => $pos->contestType?->min_age,
             'max_age' => $pos->contestType?->max_age,
             'age_reference_date' => $pos->contestType?->age_reference_date?->format('Y-m-d'),
-            'driving_license_min_years' => $pos->contestType?->driving_license_min_years ?? 2,
+            'driving_license_min_years' => $pos->contestType?->driving_license_min_years,
             'school_levels' => $pos->contestType?->school_levels ?? [],
             'has_driving_license' => (bool) ($pos->contestType?->has_driving_license ?? (($pos->contestType?->code ?? $pos->type) === 'chauffeur')),
         ];
